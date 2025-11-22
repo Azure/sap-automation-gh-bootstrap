@@ -10,18 +10,14 @@ run-name:                                         Deploy SAP Workload Zone by @$
 on:
   workflow_dispatch:
     inputs:
-      control_plane_name:
-        description:                              "Control Plane Name configuration name, use the following syntax: ENV-LOCA-VNET"
-        required:                                 true
-        type:                                     environment
       workload_zone:
         description:                              "Workload zone configuration name, use the following syntax: ENV-LOCA-VNET"
         required:                                 true
         type:                                     environment
-      inherit_settings:
-        description:                              "Inherit Terraform state file information from control plane"
-        type:                                     boolean
-        default:                                  true
+      control_plane_name:
+        description:                              "Control Plane Name"
+        required:                                 true
+        type:                                     environment
       test:
         description:                              "Test the deployment without actually deploying the resources"
         type:                                     boolean
@@ -159,17 +155,17 @@ jobs:
           deploy/scripts/pipeline_scripts/02-sap-workload-zone.sh
         env:
           APPLICATION_CONFIGURATION_NAME:         ${{ vars.APPLICATION_CONFIGURATION_NAME }}
+          APP_REGISTRATION_APP_ID:                ${{ vars.APP_REGISTRATION_APP_ID }}
           APP_TOKEN:                              ${{ steps.get_workflow_token.outputs.token }}
-          CLIENT_ID:                              ${{ vars.ARM_CLIENT_ID }}
-          CLIENT_SECRET:                          ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_CLIENT_ID:                          ${{ vars.ARM_CLIENT_ID }}
+          ARM_CLIENT_SECRET:                      ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_OBJECT_ID:                          ${{ vars.ARM_OBJECT_ID }}
+          ARM_SUBSCRIPTION_ID:                    ${{ vars.ARM_SUBSCRIPTION_ID }}
           CONTROL_PLANE_NAME:                     ${{ inputs.control_plane_name }}
           WORKLOAD_ZONE_NAME:                     ${{ inputs.workload_zone }}
           DEPLOYER_KEYVAULT:                      ${{ vars.DEPLOYER_KEYVAULT }}
-          APP_REGISTRATION_APP_ID:                ${{ vars.APP_REGISTRATION_APP_ID }}
           DEPLOYER_TFSTATE_KEY:                   "${{ inputs.control_plane_name }}-INFRASTRUCTURE.terraform.tfstate"
           IS_PIPELINE_DEPLOYMENT:                 true
-          OBJECT_ID:                              ${{ vars.ARM_OBJECT_ID }}
-          ARM_SUBSCRIPTION_ID:                    ${{ vars.ARM_SUBSCRIPTION_ID }}
           TENANT_ID:                              ${{ vars.ARM_TENANT_ID }}
           TF_VAR_tf_version:                      ${{ env.TF_VERSION }}
           TF_VAR_agent_pool:                      'Default'
