@@ -9,63 +9,6 @@ on:
         required:                                 true
         type:                                     string
         default:                                  TEST-SECE-SAP01
-      region:
-        description:                              "Azure region to deploy the workload environment to. Use the region code, e.g. 'WEEU' for westeurope."
-        required:                                 true
-        type:                                     choice
-        options:
-          - AUC2
-          - AUEA
-          - AUSE
-          - BRSO
-          - BRSE
-          - BRUS
-          - CACE
-          - CAEA
-          - CEIN
-          - CEUS
-          - CEUA
-          - EAAS
-          - EAUS
-          - EUS2
-          - FRCE
-          - FRSO
-          - GENO
-          - GEWC
-          - JAEA
-          - JAWE
-          - JINC
-          - JINW
-          - KOCE
-          - KOSO
-          - NCUS
-          - NOEU
-          - NOEA
-          - NOWE
-          - SANO
-          - SAWE
-          - SCUS
-          - SCUG
-          - SOEA
-          - SOIN
-          - SECE
-          - SWNO
-          - SWWE
-          - UACE
-          - UANO
-          - UKSO
-          - UKWE
-          - WCUS
-          - WEEU
-          - WEIN
-          - WEUS
-          - WUS2
-        default:                                  WEEU
-      workload_vnet:
-        description:                              "Workload VNet name"
-        required:                                 true
-        type:                                     string
-        default:                                  SAP01
       control_plane_name:
         description:                              "Control Plane Name"
         required:                                 true
@@ -102,9 +45,11 @@ jobs:
           GH_TOKEN:                               ${{ steps.get_workflow_token.outputs.token }}
         run:                                      |
           CONTROL_PLANE_NAME=${{ github.event.inputs.control_plane_name }}
-          environment=${{ inputs.workload_environment }}
-          region_code=${{ inputs.region }}
-          workload_vnet=${{ inputs.workload_vnet }}
+          WORKLOAD_ZONE_NAME=${{ github.event.inputs.workload_environment }}
+
+          environment=$(echo "${WORKLOAD_ZONE_NAME}" | awk -F'-' '{print $1}' | xargs)
+          region_code=$(echo "${WORKLOAD_ZONE_NAME}" | awk -F'-' '{print $2}' | xargs)
+          workload_vnet=$(echo "${WORKLOAD_ZONE_NAME}" | awk -F'-' '{print $3}' | xargs)
 
           region_code_lower=$(echo "${region_code}" | tr '[:upper:]' '[:lower:]')
 
@@ -115,11 +60,10 @@ jobs:
           echo "Region Code: $region_code"
           echo "Region: $region"
 
-          workload_config_name=${environment}-${region_code}-${workload_vnet}-INFRASTRUCTURE
-          workload_config_environment_name=${environment}-${region_code}-${workload_vnet}
-          url_to_call=/repos/${{ github.repository }}/environments/${workload_config_environment_name^^}
+          workload_config_name=${WORKLOAD_ZONE_NAME}-INFRASTRUCTURE
+          url_to_call=/repos/${{ github.repository }}/environments/${WORKLOAD_ZONE_NAME^^}
 
-          echo "Creating environment: ${workload_config_environment_name^^}"
+          echo "Creating environment: ${WORKLOAD_ZONE_NAME^^}"
           _=$(gh api \
             -X PUT \
             -H "Accept: application/vnd.github+json" \
@@ -149,16 +93,16 @@ jobs:
 
           # Set secrets
           if [[ "${{ vars.USE_MSI }}" != "true" ]]; then
-            gh secret set ARM_CLIENT_SECRET --body "${{ secrets.ARM_CLIENT_SECRET }}" --env ${workload_config_environment_name}
+            gh secret set ARM_CLIENT_SECRET --body "${{ secrets.ARM_CLIENT_SECRET }}" --env ${WORKLOAD_ZONE_NAME}
           fi
 
           # Set variables
-          gh variable set ARM_CLIENT_ID --body "${{ vars.ARM_CLIENT_ID }}" --env ${workload_config_environment_name}
-          gh variable set ARM_SUBSCRIPTION_ID --body "${{ vars.ARM_SUBSCRIPTION_ID }}" --env ${workload_config_environment_name}
-          gh variable set ARM_TENANT_ID --body "${{ vars.ARM_TENANT_ID }}" --env ${workload_config_environment_name}
-          gh variable set ARM_OBJECT_ID --body "${{ vars.ARM_OBJECT_ID }}" --env ${workload_config_environment_name}
-          gh variable set APPLICATION_CONFIGURATION_NAME --body "${{ vars.APPLICATION_CONFIGURATION_NAME }}" --env ${workload_config_environment_name}
-          gh variable set DEPLOYER_KEYVAULT --body "${{ vars.DEPLOYER_KEYVAULT }}" --env ${workload_config_environment_name}
-          gh variable set CONTROL_PLANE_NAME --body "${{ vars.CONTROL_PLANE_NAME }}" --env ${workload_config_environment_name}
-          gh variable set TERRAFORM_REMOTE_STORAGE_ACCOUNT_NAME --body "${{ vars.TERRAFORM_REMOTE_STORAGE_ACCOUNT_NAME }}" --env ${workload_config_environment_name}
-          gh variable set USE_MSI --body "${{ vars.USE_MSI }}" --env ${workload_config_environment_name}
+          gh variable set ARM_CLIENT_ID --body "${{ vars.ARM_CLIENT_ID }}" --env ${WORKLOAD_ZONE_NAME}
+          gh variable set ARM_SUBSCRIPTION_ID --body "${{ vars.ARM_SUBSCRIPTION_ID }}" --env ${WORKLOAD_ZONE_NAME}
+          gh variable set ARM_TENANT_ID --body "${{ vars.ARM_TENANT_ID }}" --env ${WORKLOAD_ZONE_NAME}
+          gh variable set ARM_OBJECT_ID --body "${{ vars.ARM_OBJECT_ID }}" --env ${WORKLOAD_ZONE_NAME}
+          gh variable set APPLICATION_CONFIGURATION_NAME --body "${{ vars.APPLICATION_CONFIGURATION_NAME }}" --env ${WORKLOAD_ZONE_NAME}
+          gh variable set DEPLOYER_KEYVAULT --body "${{ vars.DEPLOYER_KEYVAULT }}" --env ${WORKLOAD_ZONE_NAME}
+          gh variable set CONTROL_PLANE_NAME --body "${{ vars.CONTROL_PLANE_NAME }}" --env ${WORKLOAD_ZONE_NAME}
+          gh variable set TERRAFORM_REMOTE_STORAGE_ACCOUNT_NAME --body "${{ vars.TERRAFORM_REMOTE_STORAGE_ACCOUNT_NAME }}" --env ${WORKLOAD_ZONE_NAME}
+          gh variable set USE_MSI --body "${{ vars.USE_MSI }}" --env ${WORKLOAD_ZONE_NAME}
