@@ -61,13 +61,15 @@ jobs:
         with:
           fetch-depth:                            0
 
-      - name:                                     Azure Login with Managed Identity
+      - name:                                     Azure Login with User Managed Identity
         if:                                       ${{ vars.USE_MSI == 'true' }}
         uses:                                     Azure/login@v2
         with:
           auth-type:                              IDENTITY
+          client-id:                              ${{ vars.ARM_CLIENT_ID }}
           tenant-id:                              ${{ vars.ARM_TENANT_ID }}
           subscription-id:                        ${{ vars.ARM_SUBSCRIPTION_ID }}
+          enable-AzPSSession:                     false
 
       - name:                                     Azure Login with Service Principal
         if:                                       ${{ vars.USE_MSI != 'true' }}
@@ -95,7 +97,7 @@ jobs:
         env:
           APPLICATION_CONFIGURATION_NAME:         ${{ vars.APPLICATION_CONFIGURATION_NAME }}
           APP_TOKEN:                              ${{ steps.get_workflow_token.outputs.token }}
-          ARM_CLIENT_ID:                          ${{ vars.MSI_ID }}
+          ARM_CLIENT_ID:                          ${{ vars.ARM_CLIENT_ID }}
           ARM_CLIENT_SECRET:                      ${{ secrets.ARM_CLIENT_SECRET }}
           ARM_SUBSCRIPTION_ID:                    ${{ vars.ARM_SUBSCRIPTION_ID }}
           ARM_TENANT_ID:                          ${{ vars.ARM_TENANT_ID }}
@@ -128,13 +130,15 @@ jobs:
           application_id:                         "${{ secrets.APPLICATION_ID }}"
           application_private_key:                "${{ secrets.APPLICATION_PRIVATE_KEY }}"
 
-      - name:                                     Azure Login with Managed Identity
+      - name:                                     Azure Login with User Managed Identity
         if:                                       ${{ vars.USE_MSI == 'true' }}
         uses:                                     Azure/login@v2
         with:
           auth-type:                              IDENTITY
+          client-id:                              ${{ vars.ARM_CLIENT_ID }}
           tenant-id:                              ${{ vars.ARM_TENANT_ID }}
           subscription-id:                        ${{ vars.ARM_SUBSCRIPTION_ID }}
+          enable-AzPSSession:                     false
 
       - name:                                     Azure Login with Service Principal
         if:                                       ${{ vars.USE_MSI != 'true' }}

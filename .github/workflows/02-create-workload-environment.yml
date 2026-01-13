@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
     inputs:
       workload_environment:
-        description:                              "Workload zone name"
+        description:                              "Workload Zone Name"
         required:                                 true
         type:                                     string
         default:                                  TEST-SECE-SAP01

@@ -112,13 +112,15 @@ jobs:
         with:
           fetch-depth:                            0
 
-      - name:                                     Azure Login with Managed Identity
+      - name:                                     Azure Login with User Managed Identity
         if:                                       ${{ vars.USE_MSI == 'true' }}
         uses:                                     Azure/login@v2
         with:
           auth-type:                              IDENTITY
+          client-id:                              ${{ vars.ARM_CLIENT_ID }}
           tenant-id:                              ${{ vars.ARM_TENANT_ID }}
           subscription-id:                        ${{ vars.ARM_SUBSCRIPTION_ID }}
+          enable-AzPSSession:                     false
 
       - name:                                     Azure Login with Service Principal
         if:                                       ${{ vars.USE_MSI != 'true' }}
