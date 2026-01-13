@@ -1,28 +1,79 @@
 # /*---------------------------------------------------------------------------8
 # |                                                                            |
-# |     This workflows deploys the SAP SYSTEM with GitHub Actions              |
+# |     This workflows Downloads the SAP Software with GitHub Actions          |
 # |                                                                            |
 # +------------------------------------4--------------------------------------*/
 
-name:                                             04 - SAP SID Infrastructure deployment
-run-name:                                         SAP SID Infrastructure by @${{ github.actor }}
+name:                                             06 - Download SAP software
+
+run-name:                                         Download SAP software @${{ github.actor }}
 
 on:
   workflow_dispatch:
     inputs:
-      sap_system_identifier:
-        description:                              "SAP System identifier (SID)"
+      bom_base_name:
+        description:                              "Name of Bill of Materials (BoM)"
         required:                                 true
-        default:                                  "X00"
-        type:                                     string
-      workload_zone:
-        description:                              "Workload Environment ..."
+        type:                                     choice
+        options:
+          - S42023SPS00_v88_0ms (HANA_2_00_088)
+          - S42023SPS00_v87_0ms (HANA_2_00_087)
+          - NW750SPS20_v0008ms (HANA_2_00_088)
+          - NW750SPS20_v0007ms (HANA_2_00_085)
+          - S42023SPS00_v0006ms (HANA_2_00_085)
+          - S42023SPS00_v0005ms (HANA_2_00_081)
+          - S42023SPS00_v0003ms (HANA_2_00_077)
+          - S42023SPS00_v0004ms (HANA_2_00_077 - dynamic)
+          - S42022SPS00_v0004ms (HANA_2_00_077 - dynamic)
+          - S42022SPS00_v0005ms (HANA_2_00_076)
+          - S42022SPS00_v0006ms (HANA_2_00_077)
+          - S42021ISS00_v0003ms (HANA_2_00_067)
+          - S42020ISS00_v0004ms (HANA_2_00_067 - dynamic)
+          - S42020SPS03_v0005ms (HANA_2_00_067)
+          - S41909SPS03_v0012ms (HANA_2_00_059 - dynamic)
+          - S41909ISS00_v0013ms (HANA_2_00_059)
+          - NW750SPS20_v0005ms (HANA_2_00_067)
+          - NW750SPS20_v0006ms (HANA_2_00_067 - dynamic)
+          - NW750SPS25_JAVA_v0001ms (HANA_2_00_067)
+          - NW752SPS09_v0002ms (HANA_2_00_067)
+          - NW750SPS25_JAVA_HANA_v0001ms (HANA_2_00_067)
+          - NW750SPS25_JAVA_HANA_v0002ms (HANA_2_00_077)
+          - NW750SPS20_DB2_v0002ms (DB2_UDB_11_5)
+          - NW750_ORACLE_19_v0003ms (Oracle_19 - 2504  - Kernel 754)
+          - NW750_ORACLE_19_v0002ms (Oracle_19 - 2411  - Kernel 754)
+          - NW750_ORACLE_19_v0001ms (Oracle_19)
+          - NW750_ORACLE_19_ASM_v0003ms (Oracle_19 - 2504  - Kernel 754)
+          - NW750_ORACLE_19_ASM_v0002ms (Oracle_19)
+          - NW750SPS25_JAVA_Oracle_19_00_v0001ms (Oracle_19)
+          - NW750SPS20_SYBASE_v0003ms (ASE_16_0_3)
+          - NW750_MSSQL_v0003ms (MSSQL_2019)
+          - NW750_MSSQL22_v0001ms (MSSQL_2022)
+          - SOLMAN_72SR2_JAVA_v0001ms (HANA_2_00_081)
+          - SOLMAN_72SR2_v0001ms (HANA_2_00_081)
+          - HANA_2_00_059_v0011ms
+          - HANA_2_00_067_v0006ms
+          - HANA_2_00_076_v0001ms
+          - HANA_2_00_077_v0002ms
+          - HANA_2_00_081_v0001ms
+          - DB2_UDB_11_5_v0001ms
+          - ORACLE_19_00_v0003ms
+          - ORACLE_19_00_ASM_v0001ms
+          - ORACLE_19_00_ORA_MSID_v0002ms
+          - MSSQLSRV_2019_v0001ms
+          - SYBASE_1603SP15_v0003ms
+
+      control_plane_name:
+        description:                              "Control Plane Environment"
         required:                                 true
         type:                                     environment
-      test:
-        description:                              "Test deployment without applying changes"
+      re_download:
+        description:                              "Re-download"
         type:                                     boolean
         default:                                  false
+      extra_params:
+          description:                            "Extra Parameters"
+          type:                                   string
+          default:                                ""
 
 permissions:
   contents:                                       write
@@ -36,9 +87,9 @@ env:
   TF_VERSION:                                     ${{ vars.TF_VERSION }}
 
 jobs:
-  deploy_sap_infrastructure:
-    name:                                         Deploy SAP Infrastructure
-    environment:                                  ${{ inputs.workload_zone }}
+  prepare_download:
+    name:                                         Prepare Download
+    environment:                                  ${{ inputs.control_plane_name }}
     runs-on:                                      self-hosted
     container:
       image:                                      ${{ vars.DOCKER_IMAGE }}
@@ -83,22 +134,25 @@ jobs:
                                                   "tenantId": "${{ vars.ARM_TENANT_ID }}"
            }
 
-      - name:                                     Deploy SAP Infrastructure
+      - name:                                     Prepare SAP software download
         run:                                      |
           cd ${SAP_AUTOMATION_REPO_PATH}
-          chmod +x deploy/scripts/pipeline_scripts/03-sap-system-deployment.sh
-          deploy/scripts/pipeline_scripts/03-sap-system-deployment.sh
+          chmod +x deploy/scripts/pipeline_scripts/04-sap-software-download-prepare.sh
+          deploy/scripts/pipeline_scripts/04-sap-software-download-prepare.sh
         env:
           APPLICATION_CONFIGURATION_NAME:         ${{ vars.APPLICATION_CONFIGURATION_NAME }}
-          CONTROL_PLANE_NAME:                     ${{ vars.CONTROL_PLANE_NAME }}
-          WORKLOAD_ZONE_NAME:                     ${{ inputs.workload_zone }}
           APP_TOKEN:                              ${{ steps.get_workflow_token.outputs.token }}
+          BOM:                                    ${{ inputs.bom_base_name }}
+          CONTROL_PLANE_NAME:                     ${{ inputs.control_plane_name }}
+          DEPLOYER_KEYVAULT:                      ${{ vars.DEPLOYER_KEYVAULT }}
+          re_download:                            ${{ inputs.re_download }}
           ARM_CLIENT_ID:                          ${{ vars.ARM_CLIENT_ID }}
           ARM_CLIENT_SECRET:                      ${{ secrets.ARM_CLIENT_SECRET }}
           ARM_SUBSCRIPTION_ID:                    ${{ vars.ARM_SUBSCRIPTION_ID }}
           ARM_TENANT_ID:                          ${{ vars.ARM_TENANT_ID }}
-          TEST_ONLY:                              ${{ inputs.test }}
-          SAP_SYSTEM_TFVARS_FILENAME:             ${{ inputs.workload_zone }}-${{ inputs.sap_system_identifier }}.tfvars
-          SAP_SYSTEM_FOLDERNAME:                  ${{ inputs.workload_zone }}-${{ inputs.sap_system_identifier }}
+          SUSERNAME:                              ${{ vars.S_USERNAME }}
+          SPASSWORD:                              ${{ secrets.S_PASSWORD }}
           USE_MSI:                                ${{ vars.USE_MSI }}
+          TF_VAR_use_spn:                         ${{ vars.USE_MSI }}
           tf_version:                             ${{ env.TF_VERSION }}
+          EXTRA_PARAMETERS:                       ${{ inputs.extra_params }}
