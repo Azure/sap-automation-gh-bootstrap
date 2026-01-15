@@ -164,6 +164,16 @@ jobs:
           PIPELINE_EXTRA_PARAMETERS:              ${{ inputs.EXTRA_PARAMS }}
           USE_MSI:                                ${{ vars.USE_MSI }}
 
+      - name:                                     Install Ansible Collections
+        run:                                      |
+          ansible-galaxy collection install ansible.windows --force
+          ansible-galaxy collection install ansible.posix --force
+          ansible-galaxy collection install ansible.utils --force
+          ansible-galaxy collection install ansible.netcommon:5.1.2 --force
+          ansible-galaxy collection install community.windows --force
+          ansible-galaxy collection install community.general:11.4.1 --force
+          ansible-galaxy collection install microsoft.ad --force
+
       - name:                                     Parameter Validation
         uses:                                     ./.github/actions/run-ansible
         with:
