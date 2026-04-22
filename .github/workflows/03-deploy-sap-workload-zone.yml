@@ -98,6 +98,7 @@ jobs:
           CONTROL_PLANE_NAME:                     ${{ inputs.control_plane_name }}
           WORKLOAD_ZONE_NAME:                     ${{ inputs.workload_zone }}
           DEPLOYER_KEYVAULT:                      ${{ vars.DEPLOYER_KEYVAULT }}
+          GH_PAT:                                 ${{ secrets.PAT }}
           TF_VAR_agent_pool:                      'Default'
           TF_VAR_ansible_core_version:            ${{ env.ANSIBLE_CORE_VERSION }}
           TF_VAR_app_registration_app_id:         ${{ vars.APP_REGISTRATION_APP_ID }}
