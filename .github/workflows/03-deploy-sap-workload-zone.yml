@@ -62,7 +62,7 @@ jobs:
 
       - name:                                     Azure Login with User Managed Identity
         if:                                       ${{ vars.USE_MSI == 'true' }}
-        uses:                                     Azure/Login@v3
+        uses:                                     azure/login@v3
         with:
           auth-type:                              IDENTITY
           client-id:                              ${{ vars.ARM_CLIENT_ID }}
@@ -72,7 +72,7 @@ jobs:
 
       - name:                                     Azure Login with Service Principal
         if:                                       ${{ vars.USE_MSI != 'true' }}
-        uses:                                     Azure/Login@v3
+        uses:                                     azure/login@v3
         with:
           creds:                                  |
            {
@@ -134,7 +134,7 @@ jobs:
 
       - name:                                     Azure Login with User Managed Identity
         if:                                       ${{ vars.USE_MSI == 'true' }}
-        uses:                                     Azure/Login@v3
+        uses:                                     azure/login@v3
         with:
           auth-type:                              IDENTITY
           client-id:                              ${{ vars.ARM_CLIENT_ID }}
@@ -144,7 +144,7 @@ jobs:
 
       - name:                                     Azure Login with Service Principal
         if:                                       ${{ vars.USE_MSI != 'true' }}
-        uses:                                     Azure/Login@v3
+        uses:                                     azure/login@v3
         with:
           creds:                                  |
            {
