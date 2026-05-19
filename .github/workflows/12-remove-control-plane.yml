@@ -59,7 +59,7 @@ jobs:
 
       - name:                                     Azure Login with User Managed Identity
         if:                                       ${{ vars.USE_MSI == 'true' }}
-        uses:                                     Azure/login@v2
+        uses:                                     Azure/Login@v3
         with:
           auth-type:                              IDENTITY
           client-id:                              ${{ vars.ARM_CLIENT_ID }}
@@ -69,7 +69,7 @@ jobs:
 
       - name:                                     Azure Login with Service Principal
         if:                                       ${{ vars.USE_MSI != 'true' }}
-        uses:                                     Azure/Login@v2
+        uses:                                     Azure/Login@v3
         with:
           creds:                                  |
            {
@@ -127,7 +127,7 @@ jobs:
 
       - name:                                     Azure Login with Service Principal
         if:                                       ${{ vars.USE_MSI != 'true' }}
-        uses:                                     Azure/Login@v2
+        uses:                                     Azure/Login@v3
         with:
           client-id:                              ${{ vars.ARM_CLIENT_ID }}
           tenant-id:                              ${{ vars.ARM_TENANT_ID }}
@@ -135,7 +135,7 @@ jobs:
 
       - name:                                     Azure Login with initial Service Principal to remove the self-hosted runner
         if:                                       ${{ vars.USE_MSI == 'true' }}
-        uses:                                     Azure/Login@v2
+        uses:                                     Azure/Login@v3
         with:
           client-id:                              ${{ vars.ARM_SPN_CLIENT_ID }}
           tenant-id:                              ${{ vars.ARM_TENANT_ID }}
