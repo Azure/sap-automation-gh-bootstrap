@@ -8,13 +8,17 @@ on:
         required:                                  true
         default:                                   "MGMT-WEEU-DEP01"
       use_msi:
-        description:                               "Use Managed Identity"
+        description:                               "Use User-Assigned Managed Identity for authentication"
         required:                                  true
         default:                                   "false"
       msi_id:
-        description:                               "Managed Identity ID"
+        description:                               "Resource ID of the User-Assigned Managed Identity"
         required:                                  false
         default:                                   ""
+      use_webapp:
+        description:                              'Enable the Web Application'
+        required:                                 false
+        default:                                  'false'
 
 permissions:
   issues:                                          write
@@ -52,6 +56,7 @@ jobs:
           region_code_lower=$(echo "${region_code}" | tr '[:upper:]' '[:lower:]')
           use_msi=${{ github.event.inputs.use_msi }}
           msi_id=${{ github.event.inputs.msi_id }}
+          use_webapp=${{ github.event.inputs.use_webapp }}
 
           pushd /source/deploy/terraform/terraform-units/modules/sap_namegenerator
           region=$(echo "{ for k, v in var.region_mapping : v => k }[\"${region_code_lower}\"]" | terraform console | tr -d '"')
@@ -81,6 +86,7 @@ jobs:
             | sed "s|@@REGION@@|${region}|g" \
             | sed "s|@@VNET@@|${deployer_vnet}|g" \
             | sed "s|@@REGION_DISPLAY_NAME@@|${region}|g" \
+            | sed "s|@@USE_WEBAPP@@|${use_webapp}|g" \
             > WORKSPACES/DEPLOYER/${deployer_name^^}/${deployer_name^^}.tfvars
 
           if [ "${use_msi}" = "true" ]; then

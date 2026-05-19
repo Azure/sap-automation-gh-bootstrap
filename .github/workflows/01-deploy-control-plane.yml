@@ -11,19 +11,30 @@ on:
   workflow_dispatch:
     inputs:
       control_plane_name:
-        description:                              'Control Plane configuration name, use the following syntax: ENV-LOCA-VNET'
+        description:                              'Control Plane configuration name'
         required:                                 true
         type:                                     environment
+      use_webapp:
+        description:                              'Deploy the Web Application infrastructure'
+        required:                                 false
+        type:                                     boolean
+        default:                                  true
+      deploy_webapp_software:
+        description:                              'Deploy the Web Application software'
+        required:                                 false
+        type:                                     boolean
+        default:                                  true
       force_reset:
-        description:                              'Force a re-install - may require multiple re-runs'
+        description:                              'Force a re-install - Multiple executions may be required'
         required:                                 false
         type:                                     boolean
         default:                                  false
       test:
-        description:                              'Only run Terraform plan'
+        description:                              'Perform a dry-run validation - Only run Terraform plan'
         required:                                 false
         type:                                     boolean
         default:                                  false
+
 permissions:
   contents:                                       write
   id-token:                                       write
@@ -69,7 +80,7 @@ jobs:
 
       - name:                                     Azure Login with Service Principal
         if:                                       ${{ vars.USE_MSI != 'true' }}
-        uses:                                     Azure/Login@v2
+        uses:                                     azure/login@v3
         with:
           client-id:                              ${{ vars.ARM_CLIENT_ID }}
           tenant-id:                              ${{ vars.ARM_TENANT_ID }}
@@ -77,7 +88,7 @@ jobs:
 
       - name:                                     Azure Login with initial Service Principal to create the self-hosted runner
         if:                                       ${{ vars.USE_MSI == 'true' }}
-        uses:                                     Azure/Login@v2
+        uses:                                     azure/login@v3
         with:
           client-id:                              ${{ vars.ARM_SPN_CLIENT_ID }}
           tenant-id:                              ${{ vars.ARM_TENANT_ID }}
@@ -139,7 +150,7 @@ jobs:
 
       - name:                                     Azure Login with User Managed Identity
         if:                                       ${{ vars.USE_MSI == 'true' }}
-        uses:                                     Azure/login@v2
+        uses:                                     azure/login@v3
         with:
           auth-type:                              IDENTITY
           client-id:                              ${{ vars.ARM_CLIENT_ID }}
@@ -149,18 +160,7 @@ jobs:
 
       - name:                                     Azure Login with Service Principal
         if:                                       ${{ vars.USE_MSI != 'true' }}
-        uses:                                     Azure/Login@v2
-        with:
-          creds:                                  |
-           {
-                                                  "clientId": "${{ vars.ARM_CLIENT_ID }}",
-                                                  "clientSecret": "${{ secrets.ARM_CLIENT_SECRET }}",
-                                                  "subscriptionId": "${{ vars.ARM_SUBSCRIPTION_ID }}",
-                                                  "tenantId": "${{ vars.ARM_TENANT_ID }}"
-           }
-      - name:                                     Azure Login with Service Principal
-        if:                                       ${{ vars.USE_MSI != 'true' }}
-        uses:                                     Azure/Login@v2
+        uses:                                     azure/login@v3
         with:
           client-id:                              ${{ vars.ARM_CLIENT_ID }}
           tenant-id:                              ${{ vars.ARM_TENANT_ID }}
@@ -200,6 +200,7 @@ jobs:
     outputs:
       HAS_WEBAPP:                                 ${{ steps.deploy_control_plane.outputs.HAS_WEBAPP }}
       APPSERVICE_NAME:                            ${{ steps.deploy_control_plane.outputs.APPSERVICE_NAME }}
+      WEBAPP_ID:                                  ${{ steps.deploy_control_plane.outputs.WEBAPP_ID }}
 
     steps:
 
@@ -225,7 +226,7 @@ jobs:
 
       - name:                                     Azure Login with User Managed Identity
         if:                                       ${{ vars.USE_MSI == 'true' }}
-        uses:                                     Azure/login@v2
+        uses:                                     azure/login@v3
         with:
           auth-type:                              IDENTITY
           client-id:                              ${{ vars.ARM_CLIENT_ID }}
@@ -235,7 +236,7 @@ jobs:
 
       - name:                                     Azure Login with Service Principal
         if:                                       ${{ vars.USE_MSI != 'true' }}
-        uses:                                     Azure/Login@v2
+        uses:                                     azure/login@v3
         with:
           client-id:                              ${{ vars.ARM_CLIENT_ID }}
           tenant-id:                              ${{ vars.ARM_TENANT_ID }}
@@ -250,6 +251,7 @@ jobs:
         env:
           APPLICATION_CONFIGURATION_NAME:         ${{ vars.APPLICATION_CONFIGURATION_NAME }}
           APP_REGISTRATION_APP_ID:                ${{ vars.APP_REGISTRATION_APP_ID }}
+          APP_REGISTRATION_OBJECTID:              ${{ vars.APP_REGISTRATION_OBJECTID }}
           APP_TOKEN:                              ${{ steps.get_workflow_token.outputs.token }}
           ARM_CLIENT_ID:                          ${{ vars.ARM_CLIENT_ID }}
           ARM_CLIENT_SECRET:                      ${{ secrets.ARM_CLIENT_SECRET }}
@@ -268,16 +270,19 @@ jobs:
           TF_VAR_github_app_token:                ${{ steps.get_workflow_token.outputs.token }}
           TF_VAR_subscription_id:                 ${{ vars.ARM_SUBSCRIPTION_ID }}
           TF_VAR_tf_version:                      ${{ env.TF_VERSION }}
+          TF_VAR_use_webapp:                      ${{ inputs.use_webapp }}
           USE_MSI:                                ${{ vars.USE_MSI }}
           ZONE:                                   ${{ inputs.control_plane_name }}
           tf_version:                             ${{ env.TF_VERSION }}
 
-  deploy-web-app:
-    name:                                         Deploy SAP Configuration Web App
+  Web_App_Deployment:
+    name:                                         Deploy SAP configuration Web App
+    environment:                                  ${{ inputs.control_plane_name }}
     needs:                                        [prepare-deployer, deploy-control-plane]
-    if:                                           needs.deploy-control-plane.outputs.HAS_WEBAPP == 'true'
-    runs-on:                                      ${{ needs.prepare-deployer.outputs.this_agent || 'ubuntu-latest' }}
-
+    if:                                           needs.deploy-control-plane.outputs.HAS_WEBAPP == 'true' && inputs.deploy_webapp_software
+    runs-on:                                      self-hosted
+    container:
+      image:                                      ${{ vars.DOCKER_IMAGE }}
     steps:
       - name:                                     Checkout repository
         uses:                                     actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
@@ -285,9 +290,9 @@ jobs:
           path:                                   sap-automation
 
       - name:                                     Setup .NET Core
-        uses:                                     actions/setup-dotnet@v4
+        uses:                                     actions/setup-dotnet@v5
         with:
-          dotnet-version:                         '7.0.x'
+          dotnet-version:                         '9.0.x'
 
       - name:                                     Build Web Application
         run:                                      |
@@ -301,7 +306,7 @@ jobs:
 
       - name:                                     Azure Login with User Managed Identity
         if:                                       ${{ vars.USE_MSI == 'true' }}
-        uses:                                     Azure/login@v2
+        uses:                                     azure/login@v3
         with:
           auth-type:                              IDENTITY
           client-id:                              ${{ vars.ARM_CLIENT_ID }}
@@ -311,7 +316,7 @@ jobs:
 
       - name:                                     Azure Login with Service Principal
         if:                                       ${{ vars.USE_MSI != 'true' }}
-        uses:                                     Azure/Login@v2
+        uses:                                     azure/login@v3
         with:
           client-id:                              ${{ vars.ARM_CLIENT_ID }}
           tenant-id:                              ${{ vars.ARM_TENANT_ID }}
@@ -326,14 +331,14 @@ jobs:
 
       - name:                                     Configure Web App
         run:                                      |
-          az webapp config appsettings set --name ${{ needs.deploy-control-plane.outputs.APPSERVICE_NAME }} \
+          az webapp config appsettings set --ids "${{ needs.deploy-control-plane.outputs.WEBAPP_ID }}" \
             --settings \
-            'CollectionUri=${{ github.server_url }}' \
-            'ProjectName=${{ github.repository }}' \
-            'RepositoryId=${{ github.repository }}' \
-            'SourceBranch=${{ github.ref_name }}' \
-            'IS_PIPELINE_DEPLOYMENT=true' \
-            'CONTROL_PLANE_NAME=${{ inputs.control_plane_name }}'
+            "CollectionUri=${{ github.server_url }}" \
+            "ProjectName=${{ github.repository }}" \
+            "RepositoryId=${{ github.repository }}" \
+            "SourceBranch=${{ github.ref_name }}" \
+            "IS_PIPELINE_DEPLOYMENT=true" \
+            "CONTROL_PLANE_NAME=${{ inputs.control_plane_name }}"
 
       - name:                                     Document Web App Configuration Steps
         run:                                      |
@@ -341,5 +346,13 @@ jobs:
           cd ${SAP_AUTOMATION_REPO_PATH}
           bash deploy/scripts/pipeline_scripts/01-webapp-configuration.sh
         env:
+          APPLICATION_CONFIGURATION_NAME:         ${{ vars.APPLICATION_CONFIGURATION_NAME }}
           CONTROL_PLANE_NAME:                     ${{ inputs.control_plane_name }}
-          APP_REGISTRATION_APP_ID:                ${{ env.APP_REGISTRATION_APP_ID }}
+          APP_SERVICE_NAME:                       ${{ needs.deploy-control-plane.outputs.APPSERVICE_NAME }}
+          APP_REGISTRATION_APP_ID:                ${{ vars.APP_REGISTRATION_APP_ID }}
+          APP_REGISTRATION_OBJECTID:              ${{ vars.APP_REGISTRATION_OBJECTID }}
+          ARM_CLIENT_ID:                          ${{ vars.ARM_CLIENT_ID }}
+          ARM_CLIENT_SECRET:                      ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_OBJECT_ID:                          ${{ vars.ARM_OBJECT_ID }}
+          ARM_SUBSCRIPTION_ID:                    ${{ vars.ARM_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID:                          ${{ vars.ARM_TENANT_ID }}

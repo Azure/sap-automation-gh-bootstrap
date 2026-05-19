@@ -62,7 +62,7 @@ jobs:
 
       - name:                                     Azure Login with User Managed Identity
         if:                                       ${{ vars.USE_MSI == 'true' }}
-        uses:                                     Azure/login@v2
+        uses:                                     azure/login@v3
         with:
           auth-type:                              IDENTITY
           client-id:                              ${{ vars.ARM_CLIENT_ID }}
@@ -72,7 +72,7 @@ jobs:
 
       - name:                                     Azure Login with Service Principal
         if:                                       ${{ vars.USE_MSI != 'true' }}
-        uses:                                     Azure/Login@v2
+        uses:                                     azure/login@v3
         with:
           creds:                                  |
            {
@@ -134,7 +134,7 @@ jobs:
 
       - name:                                     Azure Login with User Managed Identity
         if:                                       ${{ vars.USE_MSI == 'true' }}
-        uses:                                     Azure/login@v2
+        uses:                                     azure/login@v3
         with:
           auth-type:                              IDENTITY
           client-id:                              ${{ vars.ARM_CLIENT_ID }}
@@ -144,7 +144,7 @@ jobs:
 
       - name:                                     Azure Login with Service Principal
         if:                                       ${{ vars.USE_MSI != 'true' }}
-        uses:                                     Azure/Login@v2
+        uses:                                     azure/login@v3
         with:
           creds:                                  |
            {
@@ -179,6 +179,7 @@ jobs:
           TF_VAR_app_registration_app_id:         ${{ vars.APP_REGISTRATION_APP_ID }}
           TF_VAR_subscription_id:                 ${{ vars.ARM_SUBSCRIPTION_ID }}
           TF_VAR_APP_TOKEN:                       ${{ steps.get_workflow_token.outputs.token }}
+          TF_VAR_use_spn:                         ${{ vars.USE_MSI != 'true' }}
           tf_version:                             ${{ env.TF_VERSION }}
           USE_MSI:                                ${{ vars.USE_MSI }}
           TEST_ONLY:                              ${{ inputs.test }}
