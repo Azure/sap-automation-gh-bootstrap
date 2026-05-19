@@ -25,7 +25,13 @@ on:
         required:                                 true
         type:                                     choice
         options:
+          - S4_2025_v0001ms
+          - S4_2025_SPS08ms
           - S42023SPS00_v88_0ms (HANA_2_00_088)
+          - S42023SPS00_v87_0ms (HANA_2_00_087)
+          - NW750SPS20_v0008ms (HANA_2_00_088)
+          - NW750SPS20_v0007ms (HANA_2_00_085)
+          - S42023SPS00_v0006ms (HANA_2_00_085)
           - S42023SPS00_v0005ms (HANA_2_00_081)
           - S42023SPS00_v0003ms (HANA_2_00_077)
           - S42023SPS00_v0004ms (HANA_2_00_077 - dynamic)
@@ -41,14 +47,18 @@ on:
           - NW750SPS20_v0006ms (HANA_2_00_067 - dynamic)
           - NW750SPS25_JAVA_v0001ms (HANA_2_00_067)
           - NW752SPS09_v0002ms (HANA_2_00_067)
-          - NW750SPS25_JAVA__HANA_v0001ms (HANA_2_00_067)
+          - NW750SPS25_JAVA_HANA_v0001ms (HANA_2_00_067)
+          - NW750SPS25_JAVA_HANA_v0002ms (HANA_2_00_077)
           - NW750SPS20_DB2_v0002ms (DB2_UDB_11_5)
+          - NW750_ORACLE_19_v0003ms (Oracle_19 - 2504  - Kernel 754)
+          - NW750_ORACLE_19_v0002ms (Oracle_19 - 2411  - Kernel 754)
           - NW750_ORACLE_19_v0001ms (Oracle_19)
-          - NW750_ORACLE_19_v0002ms (Oracle_19 - Kernel 754)
+          - NW750_ORACLE_19_ASM_v0003ms (Oracle_19 - 2504  - Kernel 754)
           - NW750_ORACLE_19_ASM_v0002ms (Oracle_19)
           - NW750SPS25_JAVA_Oracle_19_00_v0001ms (Oracle_19)
           - NW750SPS20_SYBASE_v0003ms (ASE_16_0_3)
           - NW750_MSSQL_v0003ms (MSSQL_2019)
+          - NW750_MSSQL22_v0001ms (MSSQL_2022)
           - SOLMAN_72SR2_JAVA_v0001ms (HANA_2_00_081)
           - SOLMAN_72SR2_v0001ms (HANA_2_00_081)
           - HANA_2_00_059_v0011ms
@@ -62,7 +72,6 @@ on:
           - ORACLE_19_00_ORA_MSID_v0002ms
           - MSSQLSRV_2019_v0001ms
           - SYBASE_1603SP15_v0003ms
-          - XBOM_Tester
       extra_params:
         description:                              "Extra Parameters"
         type:                                     string
@@ -104,6 +113,11 @@ jobs:
         with:
           app-id:                                 ${{ secrets.APPLICATION_ID }}
           private-key:                            ${{ secrets.APPLICATION_PRIVATE_KEY }}
+
+      - name:                                     Configure Git Safe Directory
+        run:                                      |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          git config --global --add safe.directory "/__w/${{ github.event.repository.name }}/${{ github.event.repository.name }}"
 
       - name:                                     Checkout repository
         uses:                                     actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1

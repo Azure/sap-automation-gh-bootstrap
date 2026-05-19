@@ -16,6 +16,8 @@ on:
         required:                                 true
         type:                                     choice
         options:
+          - S4_2025_v0001ms
+          - S4_2025_SPS08ms
           - S42023SPS00_v88_0ms (HANA_2_00_088)
           - S42023SPS00_v87_0ms (HANA_2_00_087)
           - NW750SPS20_v0008ms (HANA_2_00_088)

@@ -92,6 +92,7 @@ jobs:
           git push origin main
 
           # Set secrets
+          gh secret set PAT --body "${{ secrets.PAT }}" --env ${WORKLOAD_ZONE_NAME}
           if [[ "${{ vars.USE_MSI }}" != "true" ]]; then
             gh secret set ARM_CLIENT_SECRET --body "${{ secrets.ARM_CLIENT_SECRET }}" --env ${WORKLOAD_ZONE_NAME}
           fi

@@ -25,6 +25,8 @@ on:
         required:                                 true
         type:                                     choice
         options:
+          - S4_2025_v0001ms
+          - S4_2025_SPS08ms
           - S42023SPS00_v88_0ms (HANA_2_00_088)
           - S42023SPS00_v87_0ms (HANA_2_00_087)
           - NW750SPS20_v0008ms (HANA_2_00_088)
@@ -111,6 +113,11 @@ jobs:
         with:
           app-id:                                 ${{ secrets.APPLICATION_ID }}
           private-key:                            ${{ secrets.APPLICATION_PRIVATE_KEY }}
+
+      - name:                                     Configure Git Safe Directory
+        run:                                      |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          git config --global --add safe.directory "/__w/${{ github.event.repository.name }}/${{ github.event.repository.name }}"
 
       - name:                                     Checkout repository
         uses:                                     actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
