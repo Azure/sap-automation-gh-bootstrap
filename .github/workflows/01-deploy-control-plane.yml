@@ -279,7 +279,7 @@ jobs:
     name:                                         Deploy SAP configuration Web App
     environment:                                  ${{ inputs.control_plane_name }}
     needs:                                        [prepare-deployer, deploy-control-plane]
-    if:                                           needs.deploy-control-plane.outputs.HAS_WEBAPP == 'true' && inputs.deploy_webapp_software == 'true'
+    if:                                           needs.deploy-control-plane.outputs.HAS_WEBAPP == 'true' && inputs.deploy_webapp_software
     runs-on:                                      self-hosted
     container:
       image:                                      ${{ vars.DOCKER_IMAGE }}
