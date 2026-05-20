@@ -109,12 +109,12 @@ jobs:
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
           git config --global --add safe.directory "/__w/${{ github.event.repository.name }}/${{ github.event.repository.name }}"
 
-      - name:                                     Checkout repository
+      - name:                                     Checkout Config Repository
         uses:                                     actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth:                            0
 
-      - name:                                     Checkout tools repo
+      - name:                                     Checkout Samples Repository
         uses:                                     actions/checkout@v6
         with:
           repository:                             Azure/SAP-automation-samples
