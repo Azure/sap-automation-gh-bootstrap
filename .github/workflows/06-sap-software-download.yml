@@ -16,7 +16,6 @@ on:
         required:                                 true
         type:                                     choice
         options:
-          - S4_2025_v0001ms
           - S4_2025_SPS08ms
           - S42023SPS00_v88_0ms (HANA_2_00_088)
           - S42023SPS00_v87_0ms (HANA_2_00_087)
@@ -87,6 +86,7 @@ env:
   TF_LOG:                                         ${{ vars.TF_LOG }}
   ANSIBLE_CORE_VERSION:                           ${{ vars.ANSIBLE_CORE_VERSION }}
   TF_VERSION:                                     ${{ vars.TF_VERSION }}
+  SAMPLE_REPO_PATH:                               ${{ github.workspace }}/SAP-automation-samples
 
 jobs:
   prepare_download:
@@ -113,6 +113,12 @@ jobs:
         uses:                                     actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth:                            0
+
+      - name:                                     Checkout tools repo
+        uses:                                     actions/checkout@v6
+        with:
+          repository:                             Azure/SAP-automation-samples
+          path:                                   SAP-automation-samples
 
       - name:                                     Azure Login with User Managed Identity
         if:                                       ${{ vars.USE_MSI == 'true' }}
