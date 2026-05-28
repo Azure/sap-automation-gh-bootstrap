@@ -10,7 +10,7 @@ run-name:                                         Deploy SAP Workload Zone by @$
 on:
   workflow_dispatch:
     inputs:
-      workload_zone:
+      workload_zone_name:
         description:                              "Workload zone configuration name, use the following syntax: ENV-LOCA-VNET"
         required:                                 true
         type:                                     environment
@@ -37,7 +37,7 @@ env:
 jobs:
   populate-keyvault:
     name:                                         Save Deployment Credentials in Azure Keyvault
-    environment:                                  ${{ inputs.workload_zone }}
+    environment:                                  ${{ inputs.workload_zone_name }}
     runs-on:                                      self-hosted
     container:
       image:                                      ${{ vars.DOCKER_IMAGE }}
@@ -96,7 +96,7 @@ jobs:
           ARM_SUBSCRIPTION_ID:                    ${{ vars.ARM_SUBSCRIPTION_ID }}
           ARM_TENANT_ID:                          ${{ vars.ARM_TENANT_ID }}
           CONTROL_PLANE_NAME:                     ${{ inputs.control_plane_name }}
-          WORKLOAD_ZONE_NAME:                     ${{ inputs.workload_zone }}
+          WORKLOAD_ZONE_NAME:                     ${{ inputs.workload_zone_name }}
           DEPLOYER_KEYVAULT:                      ${{ vars.DEPLOYER_KEYVAULT }}
           GH_PAT:                                 ${{ secrets.PAT }}
           TF_VAR_agent_pool:                      'Default'
@@ -105,11 +105,11 @@ jobs:
           TF_VAR_tf_version:                      ${{ env.TF_VERSION }}
           TF_VAR_APP_TOKEN:                       ${{ steps.get_workflow_token.outputs.token }}
           USE_MSI:                                ${{ vars.USE_MSI }}
-          ZONE:                                   ${{ inputs.workload_zone }}
+          ZONE:                                   ${{ inputs.workload_zone_name }}
 
   deploy_sap_workload_zone:
     name:                                         Deploy SAP Workload Zone
-    environment:                                  ${{ inputs.workload_zone }}
+    environment:                                  ${{ inputs.workload_zone_name }}
     needs:                                        populate-keyvault
     runs-on:                                      self-hosted
     container:
@@ -168,7 +168,7 @@ jobs:
           ARM_OBJECT_ID:                          ${{ vars.ARM_OBJECT_ID }}
           ARM_SUBSCRIPTION_ID:                    ${{ vars.ARM_SUBSCRIPTION_ID }}
           CONTROL_PLANE_NAME:                     ${{ inputs.control_plane_name }}
-          WORKLOAD_ZONE_NAME:                     ${{ inputs.workload_zone }}
+          WORKLOAD_ZONE_NAME:                     ${{ inputs.workload_zone_name }}
           DEPLOYER_KEYVAULT:                      ${{ vars.DEPLOYER_KEYVAULT }}
           DEPLOYER_TFSTATE_KEY:                   "${{ inputs.control_plane_name }}-INFRASTRUCTURE.terraform.tfstate"
           IS_PIPELINE_DEPLOYMENT:                 true
