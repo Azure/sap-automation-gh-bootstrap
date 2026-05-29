@@ -95,7 +95,7 @@ jobs:
           OBJECT_ID:                              ${{ vars.ARM_OBJECT_ID }}
           TENANT_ID:                              ${{ vars.ARM_TENANT_ID }}
           TEST_ONLY:                              ${{ inputs.test }}
-          TF_VAR_use_spn:                         ${{ vars.USE_MSI }}
+          TF_VAR_use_spn:                         ${{ vars.USE_MSI != 'true' && 'true' || 'false' }}
           USE_MSI:                                ${{ vars.USE_MSI }}
   remove-control-plane-finalize:
     name:                                         Finalize Control Plane removal

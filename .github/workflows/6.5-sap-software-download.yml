@@ -4,7 +4,7 @@
 # |                                                                            |
 # +------------------------------------4--------------------------------------*/
 
-name:                                             07 - Download SAP software New
+name:                                             065 - Download SAP software - new
 
 run-name:                                         Download SAP software @${{ github.actor }}
 
