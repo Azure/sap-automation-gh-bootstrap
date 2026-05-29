@@ -15,7 +15,7 @@ on:
         required:                                 true
         default:                                  "X00"
         type:                                     string
-      workload_zone:
+      workload_zone_name:
         description:                              "Workload Environment ..."
         required:                                 true
         type:                                     environment
@@ -38,7 +38,7 @@ env:
 jobs:
   deploy_sap_infrastructure:
     name:                                         Deploy SAP Infrastructure
-    environment:                                  ${{ inputs.workload_zone }}
+    environment:                                  ${{ inputs.workload_zone_name }}
     runs-on:                                      self-hosted
     container:
       image:                                      ${{ vars.DOCKER_IMAGE }}
@@ -91,14 +91,14 @@ jobs:
         env:
           APPLICATION_CONFIGURATION_NAME:         ${{ vars.APPLICATION_CONFIGURATION_NAME }}
           CONTROL_PLANE_NAME:                     ${{ vars.CONTROL_PLANE_NAME }}
-          WORKLOAD_ZONE_NAME:                     ${{ inputs.workload_zone }}
+          WORKLOAD_ZONE_NAME:                     ${{ inputs.workload_zone_name  }}
           APP_TOKEN:                              ${{ steps.get_workflow_token.outputs.token }}
           ARM_CLIENT_ID:                          ${{ vars.ARM_CLIENT_ID }}
           ARM_CLIENT_SECRET:                      ${{ secrets.ARM_CLIENT_SECRET }}
           ARM_SUBSCRIPTION_ID:                    ${{ vars.ARM_SUBSCRIPTION_ID }}
           ARM_TENANT_ID:                          ${{ vars.ARM_TENANT_ID }}
           TEST_ONLY:                              ${{ inputs.test }}
-          SAP_SYSTEM_TFVARS_FILENAME:             ${{ inputs.workload_zone }}-${{ inputs.sap_system_identifier }}.tfvars
-          SAP_SYSTEM_FOLDERNAME:                  ${{ inputs.workload_zone }}-${{ inputs.sap_system_identifier }}
+          SAP_SYSTEM_TFVARS_FILENAME:             ${{ inputs.workload_zone_name }}-${{ inputs.sap_system_identifier }}.tfvars
+          SAP_SYSTEM_FOLDERNAME:                  ${{ inputs.workload_zone_name }}-${{ inputs.sap_system_identifier }}
           USE_MSI:                                ${{ vars.USE_MSI }}
           tf_version:                             ${{ env.TF_VERSION }}
