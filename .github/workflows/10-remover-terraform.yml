@@ -23,7 +23,7 @@ on:
         description:                              Remove the SAP Workload Zone
         type:                                     boolean
         default:                                  false
-      workload_zone_name:
+      workload_zone:
         description:                              "Workload zone name ..."
         required:                                 true
         type:                                     environment
@@ -42,7 +42,7 @@ env:
 jobs:
   remove_sap_infrastructure:
     name:                                         Remove SAP Infrastructure
-    environment:                                  ${{ inputs.workload_zone_name }}
+    environment:                                  ${{ inputs.workload_zone }}
     if:                                           ${{ inputs.cleanup_sap }}
     runs-on:                                      self-hosted
     container:
@@ -102,16 +102,16 @@ jobs:
           ARM_SUBSCRIPTION_ID:                    ${{ vars.ARM_SUBSCRIPTION_ID }}
           ARM_TENANT_ID:                          ${{ vars.ARM_TENANT_ID }}
           CONTROL_PLANE_NAME:                     ${{ vars.CONTROL_PLANE_NAME }}
-          SAP_SYSTEM_FOLDERNAME:                  ${{ inputs.workload_zone_name }}-${{ inputs.sap_system_identifier }}
-          SAP_SYSTEM_TFVARS_FILENAME:             ${{ inputs.workload_zone_name }}-${{ inputs.sap_system_identifier }}.tfvars
+          SAP_SYSTEM_FOLDERNAME:                  ${{ inputs.workload_zone }}-${{ inputs.sap_system_identifier }}
+          SAP_SYSTEM_TFVARS_FILENAME:             ${{ inputs.workload_zone }}-${{ inputs.sap_system_identifier }}.tfvars
           TEST_ONLY:                              ${{ inputs.test }}
           USE_MSI:                                ${{ vars.USE_MSI }}
-          WORKLOAD_ZONE_NAME:                     ${{ inputs.workload_zone_name }}
+          WORKLOAD_ZONE_NAME:                     ${{ inputs.workload_zone }}
           tf_version:                             ${{ env.TF_VERSION }}
 
   remove_sap_workload_zone:
     name:                                         Remove SAP Workload Zone
-    environment:                                  ${{ inputs.workload_zone_name }}
+    environment:                                  ${{ inputs.workload_zone }}
     if:                                           ${{ inputs.cleanup_workload_zone }}
     runs-on:                                      self-hosted
     container:
@@ -172,4 +172,4 @@ jobs:
           CONTROL_PLANE_NAME:                     ${{ vars.CONTROL_PLANE_NAME }}
           TEST_ONLY:                              ${{ inputs.test }}
           USE_MSI:                                ${{ vars.USE_MSI }}
-          WORKLOAD_ZONE_NAME:                     ${{ inputs.workload_zone_name }}
+          WORKLOAD_ZONE_NAME:                     ${{ inputs.workload_zone }}

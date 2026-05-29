@@ -1,29 +1,29 @@
 ---
   # /*---------------------------------------------------------------------------8
-  # |																			                                       |
-  # |	 This workflows performs the software installation					               |
-  # |												                                         						|
+  # |																			|
+  # |	 This workflows performs the software installation					  |
+  # |																			|
   # +------------------------------------4--------------------------------------*/
 
-name:											                07 Configuration and Installation
-run-name:										              Operating System Configuration and Installation by @${{ github.actor }}
+name:											 07 - Operating System Configuration and Installation
+run-name:										 Operating System Configuration and Installation by @${{ github.actor }}
 
 on:
   workflow_dispatch:
     inputs:
       sap_system_identifier:
-        description:							        "SAP System Identifier (SID)"
-        default:								          "X00"
-        type:									            string
-        required:								          true
+        description:							  "SAP System Identifier (SID)"
+        default:								  "X00"
+        required:								 true
+        type:									 string
       workload_zone_name:
-        description:							        "Workload Environment name (e.g. DEV-WEEU-SAP01)"
-        type:									            environment
-        required:								          true
+        description:							  "Workload Environment name (e.g. DEV-WEEU-SAP01)"
+        type:									 environment
+        required:								 true
       bom_name:
-        description:							        "Bill of Materials name (BoM)"
-        required:								          true
-        type:									            choice
+        description:							  "Bill of Materials name (BoM)"
+        required:								 false
+        type:									 choice
         options:
           - S4_2025_v0001ms
           - S4_2025_SPS08ms
@@ -72,73 +72,78 @@ on:
           - ORACLE_19_00_ORA_MSID_v0002ms
           - MSSQLSRV_2019_v0001ms
           - SYBASE_1603SP15_v0003ms
+      bom_override_name:
+        description:							  "Custom Name of Bill of Materials (BoM)"
+        default:								  ""
+        required:								 true
+        type:									 string
       extra_params:
         description:							  "Extra Parameters"
-        type:									      string
-        default:								    " "
+        type:									 string
+        default:								  " "
       base_os_configuration:
         description:							  "Core Operating System Configuration"
-        type:									      boolean
-        default:								    true
+        type:									 boolean
+        default:								  true
       sap_os_configuration:
         description:							  "SAP Operating System Configuration"
-        type:									      boolean
-        default:								    true
+        type:									 boolean
+        default:								  true
       bom_processing:
         description:							  "Local Software Download"
-        type:									      boolean
-        default:								    true
+        type:									 boolean
+        default:								  true
       scs_installation:
         description:							  "SCS Installation"
-        type:									      boolean
-        default:								    true
+        type:									 boolean
+        default:								  true
       database_install:
         description:							  "Database Installation"
-        type:									      boolean
-        default:								    true
+        type:									 boolean
+        default:								  true
       db_load:
         description:							  "Database Load"
-        type:									      boolean
-        default:								    true
+        type:									 boolean
+        default:								  true
       high_availability_configuration:
         description:							  "High Availability Configuration"
-        type:									      boolean
-        default:								    true
+        type:									 boolean
+        default:								  true
       pas_installation:
         description:							  "Primary Application Server Installation"
-        type:									      boolean
-        default:								    true
+        type:									 boolean
+        default:								  true
       application_server_installation:
         description:							  "Additional Application Server Installation"
-        type:									      boolean
-        default:								    true
+        type:									 boolean
+        default:								  true
       webdispatcher_installation:
         description:							  "Web Dispatcher Installation"
-        type:									      boolean
-        default:								    false
+        type:									 boolean
+        default:								  false
 
 permissions:
-  contents:									        write
-  id-token:									        write
-  issues:										        write
+  contents:									   write
+  id-token:									   write
+  issues:										 write
 
 env:
-  TF_IN_AUTOMATION:							    ${{ vars.TF_IN_AUTOMATION }}
-  TF_LOG:										        ${{ vars.TF_LOG }}
-  ANSIBLE_CORE_VERSION:						  ${{ vars.ANSIBLE_CORE_VERSION }}
-  TF_VERSION:									      ${{ vars.TF_VERSION }}
+  TF_IN_AUTOMATION:							   ${{ vars.TF_IN_AUTOMATION }}
+  TF_LOG:										 ${{ vars.TF_LOG }}
+  ANSIBLE_CORE_VERSION:						   ${{ vars.ANSIBLE_CORE_VERSION }}
+  TF_VERSION:									 ${{ vars.TF_VERSION }}
 
 jobs:
   configuration_and_installation:
-    name:										        Operating System Preparation
-    environment:								    ${{ inputs.workload_zone_name }}
-    runs-on:									      self-hosted
+    name:										 Operating System Preparation
+    environment:								  ${{ inputs.workload_zone_name }}
+    runs-on:									  self-hosted
     container:
-      image:									      ${{ vars.DOCKER_IMAGE }}
+      image:									  ${{ vars.DOCKER_IMAGE }}
     steps:
-      - name:									      Get app token
-        id:									        get_workflow_token
-        uses:									      actions/create-github-app-token@v3
+      - name:									 Get app token
+        id:									   get_workflow_token
+        uses:									 actions/create-github-app-token@v3
         with:
           client-id:							  ${{ secrets.APPLICATION_ID }}
           private-key:							${{ secrets.APPLICATION_PRIVATE_KEY }}
@@ -179,7 +184,7 @@ jobs:
         if:									   ${{ github.event.inputs.bom_name != '' }}
         id:									   bom
         run:									  |
-            input="${{ github.event.inputs.bom_name }}"
+            input="${{ case(github.event.inputs.bom_override_name != '', github.event.inputs.bom_override_name, github.event.inputs.bom_name) }}"
             bom_base_name=$(echo "$input" | cut -d' ' -f1)
             echo "bom_base_name=$bom_base_name" >> "$GITHUB_OUTPUT"
 

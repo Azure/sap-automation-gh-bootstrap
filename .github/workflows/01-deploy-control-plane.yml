@@ -7,6 +7,10 @@
 name:                                             01 - Deploy Control Plane
 run-name:                                         Deploy Control Plane by @${{ github.actor }}
 
+concurrency:
+  group:                                          control-plane-${{ github.workflow }}-${{ inputs.control_plane_name || github.ref }}
+  cancel-in-progress:                             false
+
 on:
   workflow_dispatch:
     inputs:
@@ -14,16 +18,6 @@ on:
         description:                              'Control Plane configuration name'
         required:                                 true
         type:                                     environment
-      use_webapp:
-        description:                              'Deploy the Web Application infrastructure'
-        required:                                 false
-        type:                                     boolean
-        default:                                  true
-      deploy_webapp_software:
-        description:                              'Deploy the Web Application software'
-        required:                                 false
-        type:                                     boolean
-        default:                                  true
       force_reset:
         description:                              'Force a re-install - Multiple executions may be required'
         required:                                 false
@@ -45,7 +39,8 @@ env:
   TF_LOG:                                         ${{ vars.TF_LOG }}
   ANSIBLE_CORE_VERSION:                           ${{ vars.ANSIBLE_CORE_VERSION }}
   TF_VERSION:                                     ${{ vars.TF_VERSION }}
-
+  AZURE_WEBAPP_PACKAGE_PATH:                      '.'      # set this to the path to your web app project, defaults to the repository root
+  DOTNET_VERSION:                                 '9.0.x'             # set this to the dot net version to use
 jobs:
   prepare-deployer:
     name:                                         Prepare Deployer
@@ -117,6 +112,7 @@ jobs:
           TF_VAR_app_registration_app_id:         ${{ vars.APP_REGISTRATION_APP_ID }}
           APP_TOKEN:                              ${{ steps.get_workflow_token.outputs.token }}
           TF_VAR_github_app_token:                ${{ steps.get_workflow_token.outputs.token }}
+          TF_VAR_github_pat:                      ${{ secrets.PAT }}
           ZONE:                                   ${{ inputs.control_plane_name }}
 
   populate-keyvault:
@@ -186,6 +182,7 @@ jobs:
           TF_VAR_ansible_core_version:            ${{ env.ANSIBLE_CORE_VERSION }}
           TF_VAR_app_registration_app_id:         ${{ vars.APP_REGISTRATION_APP_ID }}
           TF_VAR_github_app_token:                ${{ steps.get_workflow_token.outputs.token }}
+          TF_VAR_github_pat:                      ${{ secrets.PAT }}
           TF_VAR_tf_version:                      ${{ env.TF_VERSION }}
           USE_MSI:                                ${{ vars.USE_MSI }}
           ZONE:                                   ${{ inputs.control_plane_name }}
@@ -268,9 +265,9 @@ jobs:
           TF_VAR_ansible_core_version:            ${{ env.ANSIBLE_CORE_VERSION }}
           TF_VAR_app_registration_app_id:         ${{ vars.APP_REGISTRATION_APP_ID }}
           TF_VAR_github_app_token:                ${{ steps.get_workflow_token.outputs.token }}
+          TF_VAR_github_pat:                      ${{ secrets.PAT }}
           TF_VAR_subscription_id:                 ${{ vars.ARM_SUBSCRIPTION_ID }}
           TF_VAR_tf_version:                      ${{ env.TF_VERSION }}
-          TF_VAR_use_webapp:                      ${{ inputs.use_webapp }}
           USE_MSI:                                ${{ vars.USE_MSI }}
           ZONE:                                   ${{ inputs.control_plane_name }}
           tf_version:                             ${{ env.TF_VERSION }}
@@ -279,31 +276,12 @@ jobs:
     name:                                         Deploy SAP configuration Web App
     environment:                                  ${{ inputs.control_plane_name }}
     needs:                                        [prepare-deployer, deploy-control-plane]
-    if:                                           needs.deploy-control-plane.outputs.HAS_WEBAPP == 'true' && inputs.deploy_webapp_software
+    if:                                           ${{ needs.deploy-control-plane.outputs.WEBAPP_ID != '' }}  
     runs-on:                                      self-hosted
     container:
       image:                                      ${{ vars.DOCKER_IMAGE }}
+
     steps:
-      - name:                                     Checkout repository
-        uses:                                     actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          path:                                   sap-automation
-
-      - name:                                     Setup .NET Core
-        uses:                                     actions/setup-dotnet@v5
-        with:
-          dotnet-version:                         '9.0.x'
-
-      - name:                                     Build Web Application
-        run:                                      |
-          dotnet build "${{ github.workspace }}/sap-automation/Webapp/SDAF/*.csproj"
-
-      - name:                                     Publish Web Application
-        run:                                      |
-          dotnet publish "${{ github.workspace }}/sap-automation/Webapp/SDAF/*.csproj" --output webapp-publish --configuration Release
-          cd webapp-publish
-          zip -r ../webapp.zip *
-
       - name:                                     Azure Login with User Managed Identity
         if:                                       ${{ vars.USE_MSI == 'true' }}
         uses:                                     azure/login@v3
@@ -326,8 +304,7 @@ jobs:
         uses:                                     azure/webapps-deploy@v3
         with:
           app-name:                               ${{ needs.deploy-control-plane.outputs.APPSERVICE_NAME }}
-          package:                                webapp.zip
-          startup-command:                        ''
+          package:                                /source/Webapp/SDAF/publish/
 
       - name:                                     Configure Web App
         run:                                      |

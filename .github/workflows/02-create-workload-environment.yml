@@ -4,7 +4,7 @@ name:                                             02 - Create workload environme
 on:
   workflow_dispatch:
     inputs:
-      workload_zone_name:
+      workload_environment:
         description:                              "Workload Zone Name"
         required:                                 true
         type:                                     string
@@ -20,7 +20,7 @@ permissions:
   actions:                                        write
 
 jobs:
-  create_workload_zone_environment:
+  create_workload_environment:
     name:                                         Create workload environment
     environment:                                  ${{ inputs.control_plane_name }}
     runs-on:                                      ubuntu-latest
@@ -45,7 +45,7 @@ jobs:
           GH_TOKEN:                               ${{ steps.get_workflow_token.outputs.token }}
         run:                                      |
           CONTROL_PLANE_NAME=${{ github.event.inputs.control_plane_name }}
-          WORKLOAD_ZONE_NAME=${{ github.event.inputs.workload_zone_name }}
+          WORKLOAD_ZONE_NAME=${{ github.event.inputs.workload_environment }}
 
           environment=$(echo "${WORKLOAD_ZONE_NAME}" | awk -F'-' '{print $1}' | xargs)
           region_code=$(echo "${WORKLOAD_ZONE_NAME}" | awk -F'-' '{print $2}' | xargs)

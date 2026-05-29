@@ -9,7 +9,7 @@ on:
         required:                                 true
         type:                                     string
         default:                                  X00
-      workload_zone_name:
+      workload_environment:
         description:                              "Workload Zone Name"
         required:                                 true
         type:                                     environment
@@ -41,7 +41,7 @@ jobs:
 
       - name:                                     Create SYSTEM Directory Structure
         run:                                      |
-          WORKLOAD_ZONE_NAME=${{ github.event.inputs.workload_zone_name }}
+          WORKLOAD_ZONE_NAME=${{ github.event.inputs.workload_environment }}
           SYSTEM_SID=${{ github.event.inputs.system_sid }}
 
           environment=$(echo "${WORKLOAD_ZONE_NAME}" | awk -F'-' '{print $1}' | xargs)
