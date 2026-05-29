@@ -1,5 +1,30 @@
 #########################################################################################
 #                                                                                       #
+# Workload zone description                                                             #
+#                                                                                       #
+# Azure Region:       westeurope                                                        #
+# Workload Zone:      DEV-WEEU-SAP01                                                    #
+#                                                                                       #
+# Virtual Network:    New                                                               #
+# App Subnet:         Defined                                                           #
+# DB Subnet:          Defined
+# Web Subnet:         Defined                                                           #
+# Admin Subnet:       Defined                                                           #
+# ANF Subnet:         Not defined                                                       #
+# Storage Subnet:     Not defined                                                       #
+# iSCSI Subnet:       Not defined                                                       #
+#                                                                                       #
+# Key Vault:          New                                                               #
+# NAT:                No                                                                #
+#                                                                                       #
+# iSCSI servers:      Not in use                                                        #
+# NFS Implementation: NFS                                                               #
+#                                                                                       #
+#########################################################################################
+
+
+#########################################################################################
+#                                                                                       #
 # This sample defines a deployment that will create the networks and their subnets      #
 #                                                                                       #
 #########################################################################################
@@ -24,37 +49,61 @@
 #########################################################################################
 
 # The environment value is a mandatory field, it is used for partitioning the environments, for example (PROD and NP)
-environment="@@ENV@@"
+environment = "@@ENV@@"
 
 # The location value is a mandatory field, it is used to control where the resources are deployed
-location="@@REGION@@"
+location = "@@REGION@@"
+
+# Description of the Workload zone.
+Description = "Workload zone for @@ENV@@ systems"
+
+# If you want to provide a custom naming json use the following parameter.
+#name_override_file = ""
+
+# The subscription ID is used to control where the resources are deployed
+#subscription_id = ""
+
+#########################################################################################
+#                                                                                       #
+#  Networking                                                                           #
+#                                                                                       #
+#########################################################################################
+# The deployment automation supports two ways of providing subnet information.          #
+# 1. Subnets are defined as part of the workload zone deployment                        #
+#    In this model multiple SAP System share the subnets                                #
+# 2. Subnets are deployed as part of the SAP system                                     #
+#    In this model each SAP system has its own sets of subnets                          #
+#                                                                                       #
+# The automation supports both creating the subnets (greenfield)                        #
+# or using existing subnets (brownfield)                                                #
+# For the greenfield scenario the subnet address prefix must be specified whereas       #
+# for the brownfield scenario the Azure resource identifier for the subnet must         #
+# be specified                                                                          #
+#                                                                                       #
+# If defined these parameters control the subnet name and the subnet prefix             #
+#                                                                                       #
+#########################################################################################
 
 # The network logical name is mandatory - it is used in the naming convention and should map to the workload virtual network logical name
-network_logical_name="@@VNET@@"
+network_logical_name = "@@VNET@@"
 
-# network_address_space is a mandatory parameter when an existing virtual network is not used
-network_address_space=["10.110.0.0/16"]
+# The name is optional - it can be used to override the default naming
+#network_name = ""
 
-# admin_subnet_address_prefix is a mandatory parameter if the subnets are not defined in the workload or if existing subnets are not used
-admin_subnet_address_prefix="10.110.0.0/19"
+# network_arm_id is an optional parameter that if provided specifies Azure resource identifier for the existing Virtual Network
+#network_arm_id = ""
 
-# db_subnet_address_prefix is a mandatory parameter if the subnets are not defined in the workload or if existing subnets are not used
-db_subnet_address_prefix="10.110.96.0/19"
+# network_address_space is a mandatory parameter when an existing Virtual network is not used
+network_address_space = ["10.111.0.0/19"]
 
-# web_subnet_address_prefix is a mandatory parameter if the subnets are not defined in the workload or if existing subnets are not used
-web_subnet_address_prefix="10.110.64.0/24"
+# use_private_endpoint is a boolean flag controlling if the key vaults and storage accounts have private endpoints
+use_private_endpoint = true
 
-# app_subnet_address_prefix is a mandatory parameter if the subnets are not defined in the workload or if existing subnets are not used
-app_subnet_address_prefix="10.110.32.0/19"
-
-# The automation_username defines the user account used by the automation
-automation_username="azureadm"
-
-# Boolean value indicating if service endpoints should be used for the deployment
+# use_service_endpoint is a boolean flag controlling if the key vaults and storage accounts have service endpoints
 use_service_endpoint = true
 
-# Boolean value indicating if private endpoint should be used for the deployment
-use_private_endpoint = true
+# Defines if the SAP VNet will be peered with the control plane VNet
+peer_with_control_plane_vnet = true
 
 # Defines if access to the key vaults and storage accounts is restricted to the SAP and deployer VNets
 enable_firewall_for_keyvaults_and_storage = true
@@ -62,20 +111,233 @@ enable_firewall_for_keyvaults_and_storage = true
 # Defines if public access is allowed for the storage accounts and key vaults
 public_network_access_enabled = false
 
-# enable_rbac_authorization_for_keyvault Controls the access policy model for the workload zone keyvault.
-enable_rbac_authorization_for_keyvault = true
+# place_delete_lock_on_resources, If defined, a delete lock will be placed on the key resources
+place_delete_lock_on_resources = true
+
+# The flow timeout in minutes of the virtual network
+#network_flow_timeout_in_minutes = 0
+
+# Enable network route table propagation.
+#network_enable_route_propagation = false
 
 #########################################################################################
 #                                                                                       #
-#  Private DNS support                                                                  #                                                                                       #
+#  Admin Subnet variables                                                               #
 #                                                                                       #
 #########################################################################################
 
-# If defined provides the DNS label for the Virtual Network
-dns_label = "@@DNS_LABEL@@"
+# admin_subnet_name is an optional parameter and should only be used if the default naming is not acceptable
+#admin_subnet_name = ""
 
-# If defined provides the list of DNS servers to attach to the Virtual NEtwork
-#dns_server_list = []
+# admin_subnet_address_prefix is a mandatory parameter if the subnets are not defined in the workload or if existing subnets are not used
+admin_subnet_address_prefix = "10.111.20.0/22"
+
+# admin_subnet_arm_id is an optional parameter that if provided specifies Azure resource identifier for the existing subnet to use
+#admin_subnet_arm_id = ""
+
+# admin_subnet_nsg_name is an optional parameter and should only be used if the default naming is not acceptable for the network security group name
+#admin_subnet_nsg_name = ""
+
+# admin_subnet_nsg_arm_id is an optional parameter that if provided specifies Azure resource identifier for the existing network security group to use
+#admin_subnet_nsg_arm_id = ""
+
+#########################################################################################
+#                                                                                       #
+#  DB Subnet variables                                                                  #
+#                                                                                       #
+#########################################################################################
+
+# If defined these parameters control the subnet name and the subnet prefix
+# db_subnet_name is an optional parameter and should only be used if the default naming is not acceptable
+#db_subnet_name = ""
+
+# db_subnet_address_prefix is a mandatory parameter if the subnets are not defined in the workload or if existing subnets are not used
+db_subnet_address_prefix = "10.111.16.0/22"
+
+# db_subnet_arm_id is an optional parameter that if provided specifies Azure resource identifier for the existing subnet to use
+#db_subnet_arm_id = ""
+
+# db_subnet_nsg_name is an optional parameter and should only be used if the default naming is not acceptable for the network security group name
+#db_subnet_nsg_name = ""
+
+# db_subnet_nsg_arm_id is an optional parameter that if provided specifies Azure resource identifier for the existing network security group to use
+#db_subnet_nsg_arm_id = ""
+
+#########################################################################################
+#                                                                                       #
+#  App Subnet variables                                                                 #
+#                                                                                       #
+#########################################################################################
+
+# If defined these parameters control the subnet name and the subnet prefix
+# app_subnet_name is an optional parameter and should only be used if the default naming is not acceptable
+#app_subnet_name = ""
+
+# app_subnet_address_prefix is a mandatory parameter if the subnets are not defined in the workload or if existing subnets are not used
+app_subnet_address_prefix = "10.111.24.0/22"
+
+# app_subnet_arm_id is an optional parameter that if provided specifies Azure resource identifier for the existing subnet to use
+#app_subnet_arm_id = ""
+
+# app_subnet_nsg_name is an optional parameter and should only be used if the default naming is not acceptable for the network security group name
+#app_subnet_nsg_name = ""
+
+# app_subnet_nsg_arm_id is an optional parameter that if provided specifies Azure resource identifier for the existing network security group to use
+#app_subnet_nsg_arm_id = ""
+
+#########################################################################################
+#                                                                                       #
+#  Web Subnet variables                                                                 #
+#                                                                                       #
+#########################################################################################
+
+# If defined these parameters control the subnet name and the subnet prefix
+# web_subnet_name is an optional parameter and should only be used if the default naming is not acceptable
+#web_subnet_name = ""
+
+# web_subnet_address_prefix is a mandatory parameter if the subnets are not defined in the workload or if existing subnets are not used
+web_subnet_address_prefix = "10.111.28.0/22"
+
+# web_subnet_arm_id is an optional parameter that if provided specifies Azure resource identifier for the existing subnet to use
+#web_subnet_arm_id = ""
+
+# web_subnet_nsg_name is an optional parameter and should only be used if the default naming is not acceptable for the network security group name
+#web_subnet_nsg_name = ""
+
+# web_subnet_nsg_arm_id is an optional parameter that if provided specifies Azure resource identifier for the existing network security group to use
+#web_subnet_nsg_arm_id = ""
+
+#########################################################################################
+#                                                                                       #
+#  ANF Subnet variables                                                                 #
+#                                                                                       #
+#########################################################################################
+
+# If defined these parameters control the subnet name and the subnet prefix
+# anf_subnet_name is an optional parameter and should only be used if the default naming is not acceptable
+#anf_subnet_name = ""
+
+# anf_subnet_arm_id is an optional parameter that if provided specifies Azure resource identifier for the existing subnet
+#anf_subnet_arm_id = ""
+
+# ANF requires a dedicated subnet, the address space for the subnet is provided with  anf_subnet_address_prefix
+# anf_subnet_address_prefix is a mandatory parameter if the subnets are not defined in the workload or if existing subnets are not used
+#anf_subnet_address_prefix = ""
+
+# $anf_subnet_nsg_name is an optional parameter and should only be used if the default naming is not acceptable for the network security group name
+#anf_subnet_nsg_name = ""
+
+# anf_subnet_nsg_arm_id is an optional parameter that if provided specifies Azure resource identifier for the existing network security group to use
+#anf_subnet_nsg_arm_id = ""
+
+
+###########################################################################
+#                                                                         #
+#                                    ISCSI Networking                     #
+#                                                                         #
+###########################################################################
+
+# If defined these parameters control the subnet name and the subnet prefix
+# iscsi_subnet_name is an optional parameter and should only be used if the default naming is not acceptable
+#iscsi_subnet_name = ""
+
+# iscsi_subnet_arm_id is an optional parameter that if provided specifies Azure resource identifier for the existing subnet
+#iscsi_subnet_arm_id = ""
+
+# iscsi_subnet_address_prefix is a mandatory parameter if the subnets are not defined in the workload or if existing subnets are not used
+#iscsi_subnet_address_prefix = ""
+
+# iscsi_subnet_nsg_arm_id is an optional parameter that if provided specifies Azure resource identifier for the existing nsg
+#iscsi_subnet_nsg_arm_id = ""
+
+# iscsi_subnet_nsg_name is an optional parameter and should only be used if the default naming is not acceptable for the network security group name
+#iscsi_subnet_nsg_name = ""
+
+###########################################################################
+#                                                                         #
+#                               AMS Networking                            #
+#                                                                         #
+###########################################################################
+
+# If defined these parameters control the subnet name and the subnet prefix
+# ams_subnet_name is an optional parameter and should only be used if the default naming is not acceptable
+#ams_subnet_name = ""
+
+# ams_subnet_arm_id is an optional parameter that if provided specifies Azure resource identifier for the existing subnet
+#ams_subnet_arm_id = ""
+
+# ams_subnet_address_prefix is a mandatory parameter if the subnets are not defined in the workload or if existing subnets are not used
+#ams_subnet_address_prefix = ""
+
+# ams_subnet_nsg_arm_id is an optional parameter that if provided specifies Azure resource identifier for the existing nsg
+#ams_subnet_nsg_arm_id = ""
+
+# ams_subnet_nsg_name is an optional parameter and should only be used if the default naming is not acceptable for the network security group name
+#ams_subnet_nsg_name = ""
+
+
+###########################################################################
+#                                                                         #
+#                               Storage Subnet                            #
+#                                                                         #
+###########################################################################
+
+# If defined these parameters control the subnet name and the subnet prefix
+# storage_subnet_name is an optional parameter and should only be used if the default naming is not acceptable
+#storage_subnet_name = ""
+
+# storage_subnet_arm_id is an optional parameter that if provided specifies Azure resource identifier for the existing subnet
+#storage_subnet_arm_id = ""
+
+# storage_subnet_address_prefix is a mandatory parameter if the subnets are not defined in the workload or if existing subnets are not used
+#storage_subnet_address_prefix = ""
+
+# storage_subnet_nsg_arm_id is an optional parameter that if provided specifies Azure resource identifier for the existing nsg
+#storage_subnet_nsg_arm_id = ""
+
+# storage_subnet_nsg_name is an optional parameter and should only be used if the default naming is not acceptable for the network security group name
+#storage_subnet_nsg_name = ""
+
+# use_separate_storage_subnet defines if a separate subnet is used (HANA Scale Out scenario))
+use_separate_storage_subnet = false
+
+#########################################################################################
+#                                                                                       #
+#  Common Virtual Machine settings                                                      #
+#                                                                                       #
+#########################################################################################
+
+# user_assigned_identity_id defines the user assigned identity to be assigned to the Virtual Machines
+#user_assigned_identity_id = ""
+
+# If defined, will add the Microsoft.Azure.Monitor.AzureMonitorLinuxAgent extension to the Virtual Machines
+deploy_monitoring_extension = false
+
+# If defined, will add the Microsoft.Azure.Security.Monitoring extension to the Virtual Machines
+deploy_defender_extension = false
+
+# If defined, defines the patching mode for the Virtual Machines
+patch_mode = "ImageDefault"
+
+# If defined, defines the mode of VM Guest Patching for the Virtual Machines
+patch_assessment_mode = "ImageDefault"
+
+#########################################################################################
+#                                                                                       #
+#  Resource group details                                                               #
+#                                                                                       #
+#########################################################################################
+
+# The two resource group name and arm_id can be used to control the naming and the creation of the resource group
+
+# The resourcegroup_name value is optional, it can be used to override the name of the resource group that will be provisioned
+#resourcegroup_name = ""
+
+# The resourcegroup_name arm_id is optional, it can be used to provide an existing resource group for the deployment
+#resourcegroup_arm_id = ""
+
+# Prevent deletion of resource group if there are Resources left within the Resource Group during deletion
+prevent_deletion_if_contains_resources = true
 
 #########################################################################################
 #                                                                                       #
@@ -96,6 +358,7 @@ dns_label = "@@DNS_LABEL@@"
 # Resource group name for the resource group containing the Private DNS zone for the Privatelink resources
 #privatelink_dns_resourcegroup_name = ""
 
+
 # Defines if a custom dns solution is used
 use_custom_dns_a_registration = false
 
@@ -106,6 +369,58 @@ register_virtual_network_to_dns = true
 # register_endpoints_with_dns defines if the endpoints should be registered with the DNS
 register_endpoints_with_dns = true
 
+
+#########################################################################################
+#                                                                                       #
+#  Azure Keyvault support                                                               #
+#                                                                                       #
+#########################################################################################
+
+# The user keyvault is designed to host secrets for the administrative users
+# user_keyvault_id is an optional parameter that if provided specifies the Azure resource identifier for an existing keyvault
+#user_keyvault_id = ""
+
+# The SPN keyvault is designed to host the SPN credentials used by the automation
+# spn_keyvault_id is an optional parameter that if provided specifies the Azure resource identifier for an existing keyvault
+#spn_keyvault_id = ""
+
+# enable_purge_control_for_keyvaults is an optional parameter that can be used to disable the purge protection for Azure key vaults
+enable_purge_control_for_keyvaults = false
+
+# enable_rbac_authorization_for_keyvault Controls the access policy model for the workload zone keyvault.
+enable_rbac_authorization_for_keyvault = true
+
+# Defines a list of Object IDs to be added to the keyvault
+#additional_users_to_add_to_keyvault_policies = []
+
+# The number of days that items should be retained in the soft delete period
+soft_delete_retention_days = 14
+
+# Set expiry date for secrets
+set_secret_expiry = true
+
+#########################################################################################
+#                                                                                       #
+#  Credentials                                                                          #
+#                                                                                       #
+#########################################################################################
+
+# The automation_username defines the user account used by the automation
+automation_username = "azureadm"
+
+# The automation_password is an optional parameter that can be used to provide a password for the automation user
+# If empty Terraform will create a password and persist it in keyvault
+#automation_password = ""
+
+# The automation_path_to_public_key is an optional parameter that can be used to provide a path to an existing ssh public key file
+# If empty Terraform will create the ssh key and persist it in keyvault
+#automation_path_to_public_key = ""
+
+# The automation_path_to_private_key is an optional parameter that can be used to provide a path to an existing ssh private key file
+# If empty Terraform will create the ssh key and persist it in keyvault
+#automation_path_to_private_key = ""
+
+
 #########################################################################################
 #                                                                                       #
 #  Storage account details                                                               #
@@ -114,7 +429,7 @@ register_endpoints_with_dns = true
 
 
 # Defines the size of the install volume
-#install_volume_size = 1536
+install_volume_size = 1024
 
 # install_storage_account_id defines the Azure resource id for the install storage account
 #install_storage_account_id = ""
@@ -123,10 +438,10 @@ register_endpoints_with_dns = true
 #install_private_endpoint_id = ""
 
 # create_transport_storage defines if the workload zone will host storage for the transport data
-#create_transport_storage = true
+create_transport_storage = true
 
 # Defines the size of the transport volume
-#transport_volume_size = 0
+transport_volume_size = 128
 
 # azure_files_transport_storage_account_id defines the Azure resource id for the transport storage account
 #transport_storage_account_id = ""
@@ -142,7 +457,7 @@ register_endpoints_with_dns = true
 #witness_storage_account_arm_id = ""
 
 # storage_account_replication_type defines the replication type for Azure Files for NFS storage accounts
-#storage_account_replication_type = "LRS"
+storage_account_replication_type = "ZRS"
 
 # shared_access_key_enabled defines Storage account authorization using Shared Access Key.
 shared_access_key_enabled = false
@@ -150,12 +465,25 @@ shared_access_key_enabled = false
 # shared_access_key_enabled_nfs defines Storage account used for NFS shares authorization using Shared Access Key.
 shared_access_key_enabled_nfs = false
 
+
 # Value indicating if file shares are created when using existing storage accounts
 install_always_create_fileshares = true
 
 # Value indicating if SMB shares should be created
 install_create_smb_shares = true
 
+
+#########################################################################################
+#                                                                                       #
+#  Private DNS support                                                                  #                                                                                       #
+#                                                                                       #
+#########################################################################################
+
+# If defined provides the DNS label for the Virtual Network
+dns_label = "@@DNS_LABEL@@"
+
+# If defined provides the list of DNS servers to attach to the Virtual NEtwork
+#dns_server_list = []
 
 #########################################################################################
 #                                                                                       #
@@ -170,7 +498,10 @@ install_create_smb_shares = true
 NFS_provider = "AFS"
 
 # use_AFS_for_shared_storage defines if shared media is on AFS even when using ANF for data
-#use_AFS_for_shared_storage = true
+use_AFS_for_shared_storage = true
+
+# Defines if encryption in transit is enabled for AFS on NFS shares
+AFS_enable_encryption_in_transit = false
 
 #########################################################################################
 #                                                                                       #
@@ -248,36 +579,28 @@ NFS_provider = "AFS"
 ###########################################################################
 
 # Number of iSCSI devices to be created
-#iscsi_count = 3
+iscsi_count = 0
 
 # Size of iSCSI Virtual Machines to be created
-#iscsi_size = "Standard_D2s_v3"
+iscsi_size = "Standard_D2s_v3"
 
 # Defines if the iSCSI devices use DHCP
-#iscsi_useDHCP = true
+iscsi_useDHCP = true
 
 # Defines the Virtual Machine image for the iSCSI devices
-# iscsi_image = {
-#   os_type = "LINUX",
-#   source_image_id = "",
-#   publisher = "RedHat",
-#   offer = "RHEL",
-#   sku = "92-gen2",
-#   version = "latest",
-#   type = "marketplace"
-# }
+#iscsi_image = {}
 
 # Defines the Virtual Machine authentication type for the iSCSI devices
-#iscsi_authentication_type = "key"
+iscsi_authentication_type = "key"
 
 # Defines the username for the iSCSI devices
-#iscsi_authentication_username = "azureadm"
+iscsi_authentication_username = "azureadm"
 
 # Defines the IP Addresses for the iSCSI devices
 #iscsi_nic_ips = []
 
 # Defines the Availability zones for the iSCSI devices
-#iscsi_vm_zones = ["1", "2", "3"]
+#iscsi_vm_zones = []
 
 #########################################################################################
 #                                                                                       #
@@ -303,31 +626,23 @@ NFS_provider = "AFS"
 
 
 # Defines the number of workload _vms to create
-#utility_vm_count = 0
+utility_vm_count = 0
 
 # Defines the SKU for the workload virtual machine
 #utility_vm_size = ""
 
 # Defines the size of the OS disk for the Virtual Machine
-#utility_vm_os_disk_size = "128"
+utility_vm_os_disk_size = "128"
 
 # Defines the type of the OS disk for the Virtual Machine
-#utility_vm_os_disk_type = "Premium_LRS"
+utility_vm_os_disk_type = "Premium_LRS"
 
 
 # Defines if the utility virtual machine uses DHCP
-#utility_vm_useDHCP = true
+utility_vm_useDHCP = true
 
 # Defines if the utility virtual machine image
-# utility_vm_image = {
-#   os_type = "WINDOWS",
-#   source_image_id = "",
-#   publisher = "MicrosoftWindowsServer",
-#   offer = "windowsserver",
-#   sku = "2022-datacenter-g2",
-#   version = "latest",
-#   type = "marketplace"
-# }
+#utility_vm_image = {}
 
 # Defines if the utility virtual machine IP
 #utility_vm_nic_ips = []
@@ -339,11 +654,9 @@ NFS_provider = "AFS"
 ############################################################################################
 
 # These tags will be applied to all resources
-# tags = {
-#   "azsecpack" = "nonprod",
-#   "platformsettings.host_environment.service.platform_optedin_for_rootcerts" = "true",
-#   "owner" = "",
-# }
+tags = {
+  "DeployedBy" = "SDAF",
+}
 
 ############################################################################################
 #                                                                                          #
@@ -352,7 +665,7 @@ NFS_provider = "AFS"
 ############################################################################################
 
 # If true, an AMS instance will be created
-#create_ams_instance = true
+create_ams_instance = false
 
 # ams_instance_name If provided, the name of the AMS instance
 #ams_instance_name = ""
@@ -367,7 +680,7 @@ NFS_provider = "AFS"
 #######################################4#######################################8
 
 # If true, a NAT gateway will be created
-#deploy_nat_gateway = false
+deploy_nat_gateway = false
 
 # If provided, the name of the NAT Gateway
 #nat_gateway_name = ""
@@ -382,7 +695,7 @@ NFS_provider = "AFS"
 #nat_gateway_public_ip_arm_id = ""
 
 # The idle timeout in minutes for the NAT Gateway
-#nat_gateway_idle_timeout_in_minutes = 4
+#nat_gateway_idle_timeout_in_minutes = 0
 
 # If provided, the tags for the NAT Gateway public IP
 #nat_gateway_public_ip_tags = {}
