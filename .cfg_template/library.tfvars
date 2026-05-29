@@ -1,8 +1,4 @@
 # The automation supports both creating resources (greenfield) or using existing resources (brownfield)
-# For the greenfield scenario the automation defines default names for resources, if there is a XXXXname variable then the name is customizable
-# for the brownfield scenario the Azure resource identifiers for the resources must be specified
-
-# The automation supports both creating resources (greenfield) or using existing resources (brownfield)
 # For the greenfield scenario the automation defines default names for resources,
 # if there is a XXXXname variable then the name is customizable
 # for the brownfield scenario the Azure resource identifiers for the resources must be specified

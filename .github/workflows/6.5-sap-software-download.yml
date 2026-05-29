@@ -158,7 +158,7 @@ jobs:
         env:
           APPLICATION_CONFIGURATION_NAME:         ${{ vars.APPLICATION_CONFIGURATION_NAME }}
           APP_TOKEN:                              ${{ steps.get_workflow_token.outputs.token }}
-          BOM:                                    ${{ case(inputs.bom_override_name != '', inputs.bom_override_name, format('{0}-{1}-{2}-{3}', inputs.application_bom_base_name, inputs.db_bom_base_name, inputs.kernel_bom_base_name, inputs.bom_save_name)) }}
+          BOM:                                    ${{ inputs.bom_override_name != '' && inputs.bom_override_name || format('{0}-{1}-{2}-{3}', inputs.application_bom_base_name, inputs.db_bom_base_name, inputs.kernel_bom_base_name, inputs.bom_save_name) }}
           CONTROL_PLANE_NAME:                     ${{ inputs.control_plane_name }}
           DEPLOYER_KEYVAULT:                      ${{ vars.DEPLOYER_KEYVAULT }}
           re_download:                            ${{ inputs.re_download }}

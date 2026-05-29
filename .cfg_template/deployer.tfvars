@@ -71,8 +71,6 @@ resourcegroup_tags = {
 
 
 #management_network_name=""
-management_network_logical_name = "
-}
 
 #########################################################################################
 #                                                                                       #
