@@ -26,7 +26,7 @@ on:
       workload_zone_name:
         description:                              "Workload zone name ..."
         required:                                 true
-        type:                                     string
+        type:                                     environment
 
 permissions:
   contents:                                       write
@@ -172,4 +172,4 @@ jobs:
           CONTROL_PLANE_NAME:                     ${{ vars.CONTROL_PLANE_NAME }}
           TEST_ONLY:                              ${{ inputs.test }}
           USE_MSI:                                ${{ vars.USE_MSI }}
-          WORKLOAD_ZONE_NAME:                     ${{ inputs.workload_zone_names }}
+          WORKLOAD_ZONE_NAME:                     ${{ inputs.workload_zone_name }}

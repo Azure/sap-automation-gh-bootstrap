@@ -37,9 +37,9 @@ on:
         required:                                 true
         type:                                     choice
         options:
-          - DB_HANA_2_00_SPS06_latest
-          - DB_HANA_2_00_SPS07_latest
           - DB_HANA_2_00_SPS08_latest
+          - DB_HANA_2_00_SPS07_latest
+          - DB_HANA_2_00_SPS06_latest
           - DB_Oracle19_v2602ms
           - DB_Oracle19_v2511ms
           - DB_Oracle19_v2508ms
@@ -161,7 +161,7 @@ jobs:
           BOM:                                    ${{ inputs.bom_override_name != '' && inputs.bom_override_name || format('{0}-{1}-{2}-{3}', inputs.application_bom_base_name, inputs.db_bom_base_name, inputs.kernel_bom_base_name, inputs.bom_save_name) }}
           CONTROL_PLANE_NAME:                     ${{ inputs.control_plane_name }}
           DEPLOYER_KEYVAULT:                      ${{ vars.DEPLOYER_KEYVAULT }}
-          re_download:                            ${{ inputs.re_download }}
+          CHECK_STORAGE_ACCOUNT:                  ${{ inputs.re_download == 'true' && 'false' || 'true' }}
           ARM_CLIENT_ID:                          ${{ vars.ARM_CLIENT_ID }}
           ARM_CLIENT_SECRET:                      ${{ secrets.ARM_CLIENT_SECRET }}
           ARM_SUBSCRIPTION_ID:                    ${{ vars.ARM_SUBSCRIPTION_ID }}
