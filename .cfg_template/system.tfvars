@@ -24,6 +24,10 @@
 #                                                                                       #
 #########################################################################################
 
+# Non-commented assignments are required workflow values or deliberate settings for the
+# generated distributed HANA sample. Commented assignments are optional and show the
+# current Terraform default unless an example is explicitly identified.
+
 #########################################################################################
 #                                                                                       #
 # Deployment topologies                                                                 #
@@ -37,7 +41,7 @@
 #                                                                                       #
 # High Availability                                                                     #
 #  Define the database tier values and database_high_availability = true                #
-#  scs_server_count = 1 and scs_high_availability = true                                #
+#  Set scs_server_count to 1 and scs_high_availability to true                          #
 #  application_server_count >= 1                                                        #
 #                                                                                       #
 # The automation supports both creating resources (greenfield) or using existing        #
@@ -67,6 +71,12 @@ network_logical_name = "@@VNET@@"
 
 # The subscription ID is used to control where the resources are deployed
 # subscription_id = ""
+
+# Optional code name used in resource naming
+#codename = ""
+
+# Management subscription used by the deployment
+#management_subscription_id = ""
 
 # The sid value is a mandatory field that defines the SAP Application SID
 sid = "@@SID@@"
@@ -101,31 +111,31 @@ Description = "HANA distributed system on SUSE sles-sap-15-sp7 gen2"
 #custom_disk_sizes_filename = ""
 
 # use_secondary_ips controls if the virtual machines should be deployed with two IP addresses. Required for SAP Virtual Hostname support
-use_secondary_ips = false
+#use_secondary_ips = false
 
 # use_scalesets_for_deployment defines if Flexible Virtual Machine Scale Sets are used for the deployment
-use_scalesets_for_deployment = false
+#use_scalesets_for_deployment = false
 
 # scaleset_id defines the scale set Azure resource Id
 #scaleset_id = ""
 
 # database_use_premium_v2_storage defines if the database tier will use premium v2 storage
-database_use_premium_v2_storage = false
+#database_use_premium_v2_storage = false
 
 # upgrade_packages defines if all packages should be upgraded after installation
-upgrade_packages = false
+#upgrade_packages = false
 
 # suse_subscription_id defines the SUSE subscription ID to use for registering the SUSE VMs with the SUSE subscription management service
 #suse_subscription_id = ""
 
 # AFS_enable_encryption_in_transit defines if encryption in transit is enabled for AFS
-AFS_enable_encryption_in_transit = false
+#AFS_enable_encryption_in_transit = false
 
 # disk_controller_type_database_tier defines the disk controller type for the database tier VMs, supported values are "SCSI" and "NVMe"
-disk_controller_type_database_tier = "SCSI"
+#disk_controller_type_database_tier = "SCSI"
 
 # disk_controller_type_app_tier defines the disk controller type for the application tier VMs, supported values are "SCSI" and "NVMe"
-disk_controller_type_app_tier = "SCSI"
+#disk_controller_type_app_tier = "SCSI"
 
 #########################################################################################
 #                                                                                       #
@@ -134,10 +144,10 @@ disk_controller_type_app_tier = "SCSI"
 #########################################################################################
 
 # Defines the number of database servers
-database_server_count = 1
+#database_server_count = 1
 
 # database_high_availability is a boolean flag controlling if the database tier is deployed highly available (more than 1 node)
-database_high_availability = false
+#database_high_availability = false
 
 # For M series VMs use the SKU name for instance "M32ts"
 # If using a custom disk sizing populate with the node name for Database you have used in the file custom_disk_sizes_filename
@@ -147,7 +157,7 @@ database_size = "E20ds_v4"
 #database_vm_sku = ""
 
 # database_instance_number if provided defines the instance number of the HANA database
-#database_instance_number = ""
+#database_instance_number = "00"
 
 # database_vm_use_DHCP is a boolean flag controlling if Azure subnet provided IP addresses should be used (true)
 database_vm_use_DHCP = true
@@ -192,22 +202,52 @@ database_vm_image = {
 database_vm_zones = ["1"]
 
 # Optional, Defines the default authentication model for the Database VMs (key/password)
-#database_vm_authentication_type = ""
+#database_vm_authentication_type = "key"
 
 # Optional, Defines the list of availability sets to deploy the Database VMs in
 #database_vm_avset_arm_ids = []
 
+# Obsolete inverse availability-set flag; use database_use_avset instead
+#database_no_avset = null
+
 # Optional, Defines the that the database virtual machines will not be placed in a proximity placement group
 database_use_ppg = false
 
+# Obsolete inverse proximity-placement-group flag; use database_use_ppg instead
+#database_no_ppg = null
+
 # Optional, Defines the that the database virtual machines will not be placed in an availability set
 database_use_avset = false
+
+# Enable a dedicated storage NIC for database scale-out
+#enable_storage_nic = true
 
 # Optional, Defines if the tags for the database virtual machines
 #database_tags = {}
 
 # If true, database will deployed with Active/Active (read enabled) configuration, only supported for HANA
 #database_active_active = false
+
+# db_sizing_dictionary_key selects a database sizing dictionary entry
+#db_sizing_dictionary_key = ""
+
+# db_disk_sizes_filename supplies a custom database disk configuration
+#db_disk_sizes_filename = ""
+
+#########################################################################################
+#                                                                                       #
+#  Database observer                                                                    #
+#                                                                                       #
+#########################################################################################
+
+# Deploy an observer virtual machine for supported database clusters
+#use_observer = true
+
+# Observer virtual machine size, tags, zones, and static NIC addresses
+#observer_vm_size = "Standard_D4s_v3"
+#observer_vm_tags = {}
+#observer_vm_zones = []
+#observer_nic_ips = [""]
 
 #########################################################################################
 #                                                                                       #
@@ -217,8 +257,12 @@ database_use_avset = false
 # app_tier_sizing_dictionary_key defines the VM SKU and the disk layout for the application tier servers.
 app_tier_sizing_dictionary_key = "Optimized"
 
+# application_size and app_tier_vm_sizing select application-tier sizing entries
+#application_size = ""
+#app_tier_vm_sizing = ""
+
 # enable_app_tier_deployment is a boolean flag controlling if the application tier should be deployed
-enable_app_tier_deployment = true
+#enable_app_tier_deployment = true
 
 # app_tier_use_DHCP is a boolean flag controlling if Azure subnet provided IP addresses should be used (true)
 app_tier_use_DHCP = true
@@ -233,16 +277,16 @@ app_tier_use_DHCP = true
 scs_server_count = 1
 
 # scs_high_availability is a boolean flag controlling if SCS should be highly available
-scs_high_availability = false
+#scs_high_availability = false
 
 # scs_instance_number defines the instance number for SCS
 scs_instance_number = "01"
 
 # ers_instance_number defines the instance number for ERS
-ers_instance_number = "02"
+#ers_instance_number = "02"
 
 # pas_instance_number defines the instance number for PAS
-pas_instance_number = "00"
+#pas_instance_number = "00"
 
 
 # scs_server_zones is an optional list defining the availability zones to which deploy the SCS servers
@@ -269,6 +313,10 @@ scs_server_use_ppg = true
 
 # scs_server_use_avset defines the that the SCS virtual machines will be placed in an availability set
 scs_server_use_avset = false
+
+# Obsolete inverse placement flags; use scs_server_use_avset and scs_server_use_ppg
+#scs_server_no_avset = null
+#scs_server_no_ppg = null
 
 # scs_server_app_nic_ips, if provided provides the static IP addresses
 # for the network interface cards connected to the application subnet
@@ -305,7 +353,7 @@ application_server_zones = ["1"]
 #application_server_sku = ""
 
 # app_tier_dual_nics is a boolean flag controlling if the application tier servers should have two network cards
-app_tier_dual_nics = false
+#app_tier_dual_nics = false
 
 # application_server_app_nic_ips, if provided provides the static IP addresses
 # for the network interface cards connected to the application subnet
@@ -320,16 +368,20 @@ app_tier_dual_nics = false
 #application_server_admin_nic_ips = []
 
 # If you want to customize the disk sizes for application tier use the following parameter.
-#app_disk_sizes_filename = null
+#app_disk_sizes_filename = ""
 
 # Optional, Defines the default authentication model for the Applicatiuon tier VMs (key/password)
-#app_tier_authentication_type = ""
+#app_tier_authentication_type = "key"
 
 # application_server_use_ppg defines the that the application server virtual machines will be placed in a proximity placement group
 application_server_use_ppg = true
 
 # application_server_use_avset defines the that the application server virtual machines will be placed in an availability set
 application_server_use_avset = true
+
+# Obsolete inverse placement flags; use application_server_use_avset and application_server_use_ppg
+#application_server_no_avset = null
+#application_server_no_ppg = null
 
 # application_server_tags, if defined provides the tags to be associated to the application servers
 #application_server_tags = {}
@@ -343,11 +395,13 @@ application_server_image = {
   publisher = "SUSE",
   offer = "sles-sap-15-sp7",
   sku = "gen2",
-  version = "latest",
-  type = "marketplace"
+  version = "latest"
 }
 
 #application_server_vm_avset_arm_ids = []
+
+# app_instance_number defines the additional application server instance number
+#app_instance_number = "00"
 
 ############################################################################################
 #                                                                                          #
@@ -362,7 +416,7 @@ webdispatcher_server_count = 1
 web_sid = "W00"
 
 # web_instance_number defines the web instance number
-web_instance_number = "00"
+#web_instance_number = "00"
 
 
 # webdispatcher_server_app_nic_ips, if provided provides the static IP addresses
@@ -388,7 +442,11 @@ web_instance_number = "00"
 webdispatcher_server_use_ppg = false
 
 # webdispatcher_server_use_avset defines the that the Web dispatcher virtual machines will be placed in an availability set
-webdispatcher_server_use_avset = false
+#webdispatcher_server_use_avset = false
+
+# Obsolete inverse placement flags; use webdispatcher_server_use_avset and webdispatcher_server_use_ppg
+#webdispatcher_server_no_avset = null
+#webdispatcher_server_no_ppg = null
 
 # webdispatcher_server_tags, if defined provides the tags to be associated to the web dispatchers
 #webdispatcher_server_tags = {}
@@ -405,8 +463,7 @@ webdispatcher_server_image = {
   publisher = "SUSE",
   offer = "sles-sap-15-sp7",
   sku = "gen2",
-  version = "latest",
-  type = "marketplace"
+  version = "latest"
 }
 
 
@@ -422,17 +479,29 @@ webdispatcher_server_image = {
 # vm_disk_encryption_set_id if defined defines the custom encryption key
 #vm_disk_encryption_set_id = ""
 
+# Enable host encryption for SAP virtual machines
+#encryption_at_host_enabled = false
+
+# data_plane_available indicates whether storage access is available through the data plane
+#data_plane_available = true
+
+# custom_random_id overrides the generated random identifier
+#custom_random_id = ""
+
+# Apply storage and key vault firewall restrictions
+#enable_firewall_for_keyvaults_and_storage = true
+
 # If defined, will add the Microsoft.Azure.Monitor.AzureMonitorLinuxAgent extension to the virtual machines
 deploy_monitoring_extension = false
 
 # If defined, will add the Microsoft.Azure.Security.Monitoring extension to the virtual machines
-deploy_defender_extension = false
+#deploy_defender_extension = false
 
 # If defined, defines the patching mode for the virtual machines
-patch_mode = "ImageDefault"
+#patch_mode = "ImageDefault"
 
 # If defined, defines the mode of VM Guest Patching for the Virtual Machine
-patch_assessment_mode = "ImageDefault"
+#patch_assessment_mode = "ImageDefault"
 
 
 
@@ -443,55 +512,58 @@ patch_assessment_mode = "ImageDefault"
 #########################################################################################
 
 # scs_cluster_type defines cluster quorum type; AFA (Azure Fencing Agent), ASD (Azure Shared Disk), ISCSI
-scs_cluster_type = "AFA"
+#scs_cluster_type = "AFA"
 
 # scs_cluster_disk_lun defines the LUN number for the SAP Central Services cluster disk
-scs_cluster_disk_lun = 5
+#scs_cluster_disk_lun = 5
 
 # scs_cluster_disk_size defines the size for the SAP Central Services cluster disk
-scs_cluster_disk_size = 128
+#scs_cluster_disk_size = 128
 
 # scs_cluster_disk_type defines the storage_account_type of the shared disk for the SAP Central Services cluster
-scs_cluster_disk_type = "Premium_ZRS"
+#scs_cluster_disk_type = "Premium_ZRS"
 
 # database_cluster_type defines cluster quorum type; AFA (Azure Fencing Agent), ASD (Azure Shared Disk), ISCSI
-database_cluster_type = "AFA"
+#database_cluster_type = "AFA"
 
 # database_cluster_disk_lun defines the LUN number for the database cluster disk
-database_cluster_disk_lun = 8
+#database_cluster_disk_lun = 8
 
 # database_cluster_disk_size defines the size for the database cluster disk
-database_cluster_disk_size = 128
+#database_cluster_disk_size = 128
 
 # database_cluster_disk_type defines the storage_account_type of the shared disk for the Database cluster
-database_cluster_disk_type = "Premium_ZRS"
+#database_cluster_disk_type = "Premium_ZRS"
 
 # use_msi_for_clusters if defined will use managed service identity for the Pacemaker cluster fencing
 use_msi_for_clusters = true
 
 # fencing_role_name, If specified the role name to use for the fencing agent
-#fencing_role_name = ""
+#fencing_role_name = "Virtual Machine Contributor"
 
 # use_simple_mount specifies if Simple mounts are used (Applicable for SLES 15 SP# or newer)
-use_simple_mount = false
+#use_simple_mount = false
 
 # Configure fencing device based on the fence agent fence_kdump for both SCS and DB clusters
-use_fence_kdump = false
+#use_fence_kdump = false
 
 # Default size of the kdump disk which will be attached to the VMs which are part DB cluster
-use_fence_kdump_size_gb_db = 128
+#use_fence_kdump_size_gb_db = 128
 
 # Default LUN number of the kdump disk which will be attached to the VMs which are part of DB cluster
-use_fence_kdump_lun_db = 8
+#use_fence_kdump_lun_db = 8
 
 # Default size of the kdump disk which will be attached to the VMs which are part of SCS cluster
-use_fence_kdump_size_gb_scs = 64
+#use_fence_kdump_size_gb_scs = 64
 
 # Default LUN number of the kdump disk which will be attached to the VMs which are part of SCS cluster
-use_fence_kdump_lun_scs = 4
+#use_fence_kdump_lun_scs = 4
 
 # If true, the SAP HANA SR cluster will be configured with SAP HANA SR - An Next Generation Interface
 #use_sles_saphanasr_angi = false
+
+# use_saphanasr_angi is the current cross-distribution option
+#use_saphanasr_angi = false
 
 #########################################################################################
 #                                                                                       #
@@ -504,8 +576,12 @@ use_fence_kdump_lun_scs = 4
 # ANF indicates that Azure NetApp Files is used
 # NFS indicates that a custom solution is used for NFS
 NFS_provider = "AFS"
+
+# Use Azure Files for shared storage even when ANF provides database storage
+#use_AFS_for_shared_storage = false
+
 # sapmnt_volume_size defines the size of the sapmnt volume in GB
-sapmnt_volume_size = 128
+#sapmnt_volume_size = 128
 
 # azure_files_sapmnt_id defines the Resource identifier for Azure Files for NFS storage account for sapmnt
 #azure_files_sapmnt_id = ""
@@ -523,7 +599,7 @@ use_random_id_for_storageaccounts = true
 #########################################################################################
 
 # ANF_HANA_use_AVG defines if the ANF volume will be created in an Application Volume Group
-ANF_HANA_use_AVG = false
+#ANF_HANA_use_AVG = false
 
 # ANF_HANA_use_Zones defines if the ANF volume will be created in an Availability zones
 ANF_HANA_use_Zones = true
@@ -539,19 +615,19 @@ ANF_HANA_use_Zones = true
 #ANF_HANA_data = false
 
 # ANF_HANA_data_volume_size, if defined, provides the size of the HANA data volume(s).
-#ANF_HANA_data_volume_size = 0
+#ANF_HANA_data_volume_size = 512
 
 # ANF_HANA_data_volume_throughput, if defined, provides the throughput of the HANA data volume(s).
-#ANF_HANA_data_volume_throughput = 0
+#ANF_HANA_data_volume_throughput = 128
 
 # Use existing Azure NetApp volumes for HANA data.
 #ANF_HANA_data_use_existing_volume = false
 
 # ANF_HANA_data_volume_name, if defined, provides the name of the HANA data volume(s).
-#ANF_HANA_data_volume_name = ""
+#ANF_HANA_data_volume_name = [""]
 
 # Number of ANF Data Volumes
-ANF_HANA_data_volume_count = 1
+#ANF_HANA_data_volume_count = 1
 
 
 #########################################################################################
@@ -564,19 +640,19 @@ ANF_HANA_data_volume_count = 1
 #ANF_HANA_log = false
 
 # ANF_HANA_log_volume_size, if defined, provides the size of the HANA log volume(s).
-#ANF_HANA_log_volume_size = 0
+#ANF_HANA_log_volume_size = 512
 
 # ANF_HANA_log_volume_throughput, if defined, provides the throughput of the HANA log volume(s).
-#ANF_HANA_log_volume_throughput = 0
+#ANF_HANA_log_volume_throughput = 128
 
 # Use existing Azure NetApp volumes for HANA log.
 #ANF_HANA_log_use_existing = false
 
 # ANF_HANA_log_volume_name, if defined, provides the name of the HANA log volume(s).
-#ANF_HANA_log_volume_name = ""
+#ANF_HANA_log_volume_name = [""]
 
 # Number of ANF Data Volumes
-ANF_HANA_log_volume_count = 1
+#ANF_HANA_log_volume_count = 1
 
 #########################################################################################
 #                                                                                       #
@@ -588,16 +664,16 @@ ANF_HANA_log_volume_count = 1
 #ANF_HANA_shared = false
 
 # ANF_HANA_shared_volume_size, if defined, provides the size of the HANA shared volume(s).
-#ANF_HANA_shared_volume_size = 0
+#ANF_HANA_shared_volume_size = 512
 
 # ANF_HANA_shared_volume_throughput, if defined, provides the throughput of the HANA shared volume(s).
-#ANF_HANA_shared_volume_throughput = 0
+#ANF_HANA_shared_volume_throughput = 128
 
 # Use existing Azure NetApp volumes for HANA shared.
 #ANF_HANA_shared_use_existing = false
 
 # ANF_HANA_shared_volume_name, if defined, provides the name of the HANA shared volume(s).
-#ANF_HANA_shared_volume_name = ""
+#ANF_HANA_shared_volume_name = 512
 
 
 #########################################################################################
@@ -610,10 +686,10 @@ ANF_HANA_log_volume_count = 1
 #ANF_usr_sap = false
 
 # ANF_usr_sap_volume_size, if defined, provides the size of the /usr/sap volume.
-#ANF_usr_sap_volume_size = 0
+#ANF_usr_sap_volume_size = 512
 
 # ANF_usr_sap_throughput, if defined, provides the throughput of the /usr/sap volume.
-#ANF_usr_sap_throughput = 0
+#ANF_usr_sap_throughput = 128
 
 # Use existing Azure NetApp volumes for /usr/sap.
 #ANF_usr_sap_use_existing = false
@@ -632,10 +708,10 @@ ANF_HANA_log_volume_count = 1
 #ANF_sapmnt = false
 
 # ANF_sapmnt_volume_size, if defined, provides the size of the /sapmnt volume.
-#ANF_sapmnt_volume_size = 0
+#ANF_sapmnt_volume_size = 64
 
 # ANF_sapmnt_volume_throughput, if defined, provides the throughput of the /sapmnt volume.
-#ANF_sapmnt_volume_throughput = 0
+#ANF_sapmnt_volume_throughput = 64
 
 # Use existing Azure NetApp volumes for /sapmnt.
 #ANF_sapmnt_use_existing = false
@@ -672,11 +748,11 @@ ANF_HANA_log_volume_count = 1
 # If empty Terraform will create the ssh key and persist it in keyvault
 #automation_path_to_private_key = ""
 
-# vm_disk_encryption_set_id if defined defines the custom encryption key
-#vm_disk_encryption_set_id = ""
+# Use service-principal authentication instead of managed identity
+#use_spn = false
 
 # nsg_asg_with_vnet if set controls where the Application Security Groups are created
-nsg_asg_with_vnet = false
+#nsg_asg_with_vnet = false
 
 #########################################################################################
 #                                                                                       #
@@ -690,8 +766,11 @@ nsg_asg_with_vnet = false
 # The resourcegroup_name arm_id is optional, it can be used to provide an existing resource group for the deployment
 #resourcegroup_arm_id = ""
 
+# Tags applied to the SAP system resource group
+#resourcegroup_tags = {}
+
 # Prevent deletion of resource group if there are Resources left within the Resource Group during deletion
-prevent_deletion_if_contains_resources = true
+#prevent_deletion_if_contains_resources = true
 
 
 #########################################################################################
@@ -707,7 +786,7 @@ prevent_deletion_if_contains_resources = true
 #proximityplacementgroup_arm_ids = []
 
 # Boolean value indicating if an proximity placement group should be used for the app tier VMs
-use_app_proximityplacementgroups = false
+#use_app_proximityplacementgroups = false
 
 # If provided, names of the application proximity placement groups
 #app_proximityplacementgroup_names = []
@@ -730,7 +809,7 @@ use_app_proximityplacementgroups = false
 #spn_keyvault_id = ""
 
 # If defined, will enable purge control for the key vaults
-enable_purge_control_for_keyvaults = false
+#enable_purge_control_for_keyvaults = false
 
 #########################################################################################
 #                                                                                       #
@@ -753,10 +832,10 @@ enable_purge_control_for_keyvaults = false
 #########################################################################################
 
 # use_loadbalancers_for_standalone_deployments is a boolean flag that can be used to control if standalone deployments (non HA) will have load balancers
-use_loadbalancers_for_standalone_deployments = true
+#use_loadbalancers_for_standalone_deployments = true
 
 # use_private_endpoint is a boolean flag controlling if the key vaults and storage accounts have private endpoints
-use_private_endpoint = true
+#use_private_endpoint = true
 
 
 #########################################################################################
@@ -849,6 +928,19 @@ use_private_endpoint = true
 
 #########################################################################################
 #                                                                                       #
+#  Storage Subnet variables - only valid for scale-out configurations                   #
+#                                                                                       #
+#########################################################################################
+
+# Optional storage subnet name, existing resource IDs, and address prefix
+#storage_subnet_name = ""
+#storage_subnet_arm_id = ""
+#storage_subnet_address_prefix = ""
+#storage_subnet_nsg_name = ""
+#storage_subnet_nsg_arm_id = ""
+
+#########################################################################################
+#                                                                                       #
 # Anchor VM                                                                             #
 #                                                                                       #
 # The Anchor VM can be used as the first Virtual Machine deployed by the deployment,    #
@@ -862,18 +954,25 @@ use_private_endpoint = true
 #deploy_anchor_vm = false
 
 # anchor_vm_sku if used is mandatory and defines the virtual machine SKU
-#anchor_vm_sku = ""
+#anchor_vm_sku = "Standard_D2s_v4"
 
 # Defines the default authentication model for the Anchor VM (key/password)
-#anchor_vm_authentication_type = ""
+#anchor_vm_authentication_type = "key"
 
 # Defines if the anchor VM should use accelerated networking
-#anchor_vm_accelerated_networking = false
+#anchor_vm_accelerated_networking = true
 
 # The anchor_vm_image defines the Virtual machine image to use,
 # if source_image_id is specified the deployment will use the custom image provided
 # in this case os_type must also be specified
-#anchor_vm_image = {}
+#anchor_vm_image = {
+#  os_type         = "LINUX"
+#  source_image_id = ""
+#  publisher       = "SUSE"
+#  offer           = "sles-sap-15-sp5"
+#  sku             = "gen2"
+#  version         = "latest"
+#}
 
 # anchor_vm_nic_ips if defined will provide the IP addresses for the the Anchor VMs
 #anchor_vm_nic_ips = []
@@ -882,26 +981,8 @@ use_private_endpoint = true
 #anchor_vm_use_DHCP = false
 
 # anchor_vm_authentication_username defines the username for the anchor VM
-#anchor_vm_authentication_username = ""
+#anchor_vm_authentication_username = "azureadm"
 
-
-#########################################################################################
-#                                                                                       #
-#  Terraform deployment parameters                                                      #
-#                                                                                       #
-#########################################################################################
-
-# These are required parameters, if using the deployment scripts they will be auto populated otherwise they need to be entered
-
-# tfstate_resource_id is the Azure resource identifier for the Storage account in the SAP Library
-# that will contain the Terraform state files
-#tfstate_resource_id = null
-
-# deployer_tfstate_key is the state file name for the deployer
-#deployer_tfstate_key = null
-
-# landscape_tfstate_key is the state file name for the workload deployment
-#landscape_tfstate_key = null
 
 #########################################################################################
 #                                                                                       #
@@ -935,19 +1016,25 @@ tags = {
 #########################################################################################
 
 # If true, the database tier will be configured for scale out scenario
-database_HANA_use_scaleout_scenario = false
+#database_HANA_use_scaleout_scenario = false
 
 # If true, the database scale out tier will not have a standby role
-database_HANA_no_standby_role = false
+#database_HANA_no_standby_role = false
 
 # Defined the standby node count in a scale out scenario
-stand_by_node_count = 0
+#stand_by_node_count = 0
 
 # The Azure Resource identifier for the HANA shared volume storage account
-hanashared_id = [""]
+#hanashared_id = []
 
 # The Azure Resource identifier for the private endpoint connection to the HANA shared volume
-hanashared_private_endpoint_id = [""]
+#hanashared_private_endpoint_id = []
+
+# Size in GB of the HANA shared volume
+#hanashared_volume_size = 128
+
+# Use one HANA shared storage account for all file shares
+#use_single_hana_shared = false
 
 
 #########################################################################################
@@ -957,10 +1044,10 @@ hanashared_private_endpoint_id = [""]
 #########################################################################################
 
 # If defined, will enable prometheus high availability cluster monitoring
-enable_ha_monitoring = false
+#enable_ha_monitoring = false
 
 # If defined, will enable prometheus operating system level monitoring
-enable_os_monitoring = false
+#enable_os_monitoring = false
 
 # If defined, will use the specified Azure Monitor for SAP instance, else will use the AMS instance in the workload zone.
 #ams_resource_id = ""
@@ -972,11 +1059,29 @@ enable_os_monitoring = false
 #                                                                                       #
 #########################################################################################
 
+# AzureUSGovernment: uncomment this entire block to override the Public Azure defaults.
+# Public Azure: leave this block commented; Terraform supplies the Public Azure zone names.
+#dns_zone_names = {
+#  file_dns_zone_name  = "privatelink.file.core.usgovcloudapi.net"
+#  blob_dns_zone_name  = "privatelink.blob.core.usgovcloudapi.net"
+#  vault_dns_zone_name = "privatelink.vaultcore.usgovcloudapi.net"
+#}
+
+# Custom DNS registration and optional DNS hosting subscriptions/resource groups
+#use_custom_dns_a_registration = false
+#management_dns_subscription_id = ""
+#management_dns_resourcegroup_name = ""
+#privatelink_dns_subscription_id = ""
+#privatelink_dns_resourcegroup_name = ""
+
 # dns_a_records_for_secondary_names defines if DNS records should be created for the virtual host names
-dns_a_records_for_secondary_names = true
+#dns_a_records_for_secondary_names = true
 
 # register_endpoints_with_dns defines if the endpoints should be registered with the DNS
-register_endpoints_with_dns = true
+#register_endpoints_with_dns = true
+
+# Register storage accounts and key vaults with their Private DNS zones
+#register_storage_accounts_keyvaults_with_dns = true
 
 
 
@@ -987,10 +1092,27 @@ register_endpoints_with_dns = true
 #########################################################################################
 
 # deploy_application_security_groups if defined will create application security groups
-deploy_application_security_groups = true
+#deploy_application_security_groups = true
 
 # deploy_v1_monitoring_extension Defines if the Microsoft.AzureCAT.AzureEnhancedMonitoring extension will be deployed
 deploy_v1_monitoring_extension = false
+
+# legacy_nic_order reverses NIC ordering for compatibility
+#legacy_nic_order = false
+
+# Select admin NIC naming and assignment behavior for observers and ASGs
+#use_admin_nic_suffix_for_observer = false
+#use_admin_nic_for_asg = false
+
+# SCS/ERS load balancer idle timeout in minutes
+#idle_timeout_scs_ers = 30
+
+# Agent_IP optionally identifies the workflow agent for storage and key vault firewall rules
+#Agent_IP = ""
+#add_Agent_IP = true
+
+# shared_home enables shared-home support
+#shared_home = false
 
 # resource_offset can be used to provide an offset for resource naming
 # server#, disk#
@@ -1003,13 +1125,27 @@ save_naming_information = true
 #custom_prefix = ""
 
 # use_prefix defines if a prefix will be added to the resource names
-use_prefix = true
-
-# use_zonal_markers defines if a zonal markers will be added to the virtual machine resource names
-use_zonal_markers = false
+#use_prefix = true
 
 # shared_access_key_enabled defines Storage account authorization using Shared Access Key.
-shared_access_key_enabled = false
+#shared_access_key_enabled = false
 
 # shared_access_key_enabled_nfs defines Storage account used for NFS shares authorization using Shared Access Key.
-shared_access_key_enabled_nfs = false
+#shared_access_key_enabled_nfs = false
+
+# Storage account replication type
+#storage_account_replication_type = "ZRS"
+
+# VMAgent platform updates
+#platform_updates = "true"
+
+#########################################################################################
+#                                                                                       #
+#  Application configuration                                                            #
+#                                                                                       #
+#########################################################################################
+
+# Existing Azure App Configuration resource and related deployment names
+#application_configuration_id = ""
+#control_plane_name = ""
+#workload_zone_name = ""

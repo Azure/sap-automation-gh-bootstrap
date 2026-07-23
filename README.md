@@ -1,45 +1,103 @@
-# Use SAP Deployment Automation Framework from GitHub
+# SAP Deployment Automation Framework with GitHub Actions
 
-GitHub streamlines the deployment process by providing workflows that you can run to perform the infrastructure deployment and the configuration and SAP installation activities.
+This repository is a configuration and workflow template for deploying SAP on Azure with the [SAP Deployment Automation Framework (SDAF)](https://github.com/Azure/sap-automation). SDAF uses Terraform to deploy infrastructure and Ansible to configure operating systems and install SAP software.
 
-You can use GitHub Repos to store your configuration files and use GitHub Actions to deploy and configure the infrastructure and the SAP application.
+The deployment consists of:
 
-## Sign up for GitHub
+1. A **control plane** containing the deployer virtual machine, SAP library, Terraform state, credentials, and self-hosted GitHub Actions runner.
+2. An **SAP application plane** containing workload zones and SAP systems managed by the control plane.
 
-To use SAP Deployment Automation Framework from GitHub, you need to have a GitHub account and the right permissions to create a repository.
+> [!WARNING]
+> The sample configuration creates billable Azure resources. Review architecture, networking, sizing, quota, security, and cost before applying a Terraform plan.
 
-## Create a new GitHub repository
+## Getting started
 
-Use the `https://github.com/Azure/sap-automation-gh-bootstrap` repository template as a starting point for your own repository. Click the [**Use this template**](https://github.com/new?template_name=sap-automation-gh-bootstrap&template_owner=Azure) button to create a new repository based on the template.
+Follow the guides in order:
 
-> [!NOTE]
-> The GitHub Actions is using Environments to store secrets and variables. Make sure your repository can use the [environments feature](https://docs.github.com/en/actions/deployment/targeting-different-environments/using-environments-for-deployment) and the Issues feature is enabled.
+1. [Prerequisites and planning](docs/01-prerequisites.md)
+2. [Bootstrap GitHub and Azure](docs/02-bootstrap.md)
+3. [Create and deploy the control plane](docs/03-control-plane.md)
+4. [Create and deploy a workload zone](docs/04-workload-zone.md)
+5. [Create and deploy an SAP system](docs/05-sap-system.md)
+6. [Download software and install SAP](docs/06-software-installation.md)
+7. [Operations, troubleshooting, and removal](docs/07-operations.md)
 
-You can use the Python script to help you automating the setup of a GitHub App, repository secrets, environment, and connection to Azure for deploying SAP Deployment Automation Framework on Azure
+Do not start with workflow `01`. The bootstrap process and workflow `00` create the GitHub environment, secrets, variables, and Terraform configuration required by later workflows.
 
-# Deploy the Control Plane
+## Workflow sequence
 
-The deployment uses the configuration defined in the Terraform variable files located in the `/WORKSPACES/DEPLOYER` and `/WORKSPACES/LIBRARY` folders.
+| Order | Workflow | Outcome |
+| --- | --- | --- |
+| 00 | Create Control Plane Environment | Control-plane GitHub environment and configuration |
+| 01 | Deploy Control Plane | Deployer, SAP library, and self-hosted runner |
+| 02 | Create workload environment | Workload-zone environment and configuration |
+| 03 | Deploy SAP Workload Zone | Shared workload-zone infrastructure |
+| 04 | Create SYSTEM environment | SAP system configuration |
+| 05 | SAP SID Infrastructure deployment | SAP virtual machines and infrastructure |
+| 06 or 06.5 | Download SAP software | SAP installation media |
+| 07 | Operating System Configuration and Installation | Configured and installed SAP system |
 
-1. In the GitHub repository, navigate to the `Actions` tab.
-2. Select the `01 - Deploy Control Plane` workflow.
-3. Click the `Run workflow` button and select the configuration name for the deployer and the SAP library.
+Wait for each workflow to succeed and review its output before starting the next one.
 
-![Run Workflow - Deploy Control Plane](docs/RunWorkflowDeployControlPlane.png)
+## Configuration templates and deployment inputs
 
-You can track the progress in the `Actions` tab. After the deployment is finished, you can see the control plane details on the summary output.
+Files under `.cfg_template` are source templates. Creation workflows substitute their
+`@@...@@` placeholders and generate the Terraform deployment inputs under `WORKSPACES`:
 
-# GitHub runner troubleshooting
+| Source template | Creation workflow | Generated configuration |
+| --- | --- | --- |
+| `deployer.tfvars` | `00 - Create Control Plane Environment` | `WORKSPACES/DEPLOYER/.../*.tfvars` |
+| `library.tfvars` | `00 - Create Control Plane Environment` | `WORKSPACES/LIBRARY/.../*.tfvars` |
+| `landscape.tfvars` | `02 - Create workload environment` | `WORKSPACES/LANDSCAPE/.../*.tfvars` |
+| `system.tfvars` | `04 - Create SYSTEM environment` | `WORKSPACES/SYSTEM/.../*.tfvars` |
 
-The GitHub runner is a self-hosted runner that runs the GitHub Actions. If you encounter issues with the runner, you can troubleshoot the runner by following these steps.
+The generated `WORKSPACES` files, not `.cfg_template` directly, are the deployment inputs.
+Review and customize generated files after creation, then commit approved changes before
+running the corresponding deployment workflow. Template changes affect future generation;
+they do not update existing `WORKSPACES` files. Apply approved changes to both locations
+when a setting must remain consistent for current and future environments.
 
-- Validate the runner is registered in your repository and is **Online** or **Active** in the `Settings` - `Actions` - `Runners` in the GitHub repository.
-- Validate the runner is installed on the VM by validating the output of the VM extension Custom Script named `configure_deployer` in the Azure Portal.
+In each template, non-commented assignments are mandatory workflow values or deliberate
+generated configuration. Commented assignments are optional and show the current Terraform
+default unless explicitly labeled as an example or cloud-specific override; comments also
+identify required values that SDAF scripts inject at deployment time.
 
-## Retry installation of the GitHub runner
+Each template contains one commented `dns_zone_names` block with Azure Government values.
+When deploying to `AzureUSGovernment`, explicitly uncomment that entire block. For Public
+Azure, leave it commented because Terraform already supplies the Public Azure DNS zone
+names by default. Do not add a redundant Public Azure assignment or enable multiple blocks.
+The GitHub environment's `AZURE_ENVIRONMENT` selects Azure authentication endpoints; the
+`dns_zone_names` override separately selects the Private DNS suffixes used by Terraform.
 
-The GitHub runner is installed on the Deployer VM in the first step of the deployment. If the runner installation fails, you can retry the installation by following these steps.
+Deployment is intentionally staged. Later workflows consume the approved `WORKSPACES`
+configuration and Terraform state persisted by the SAP library, so complete and validate
+each stage before starting a dependent stage.
 
-- Remove the Custom Script extension `configure_deployer` in the Azure Portal.
-- Remove the runner from the GitHub repository.
-- Run the `Deploy Control Plane` workflow again, with the `Force a re-install` setting enabled.
+## Current implementation status
+
+This repository is an evolving template. Review these limitations before using it for deployment:
+
+| Area | Status | Required action |
+| --- | --- | --- |
+| Workflow `01` dry run | Not operational | The `test` input is not forwarded to the deployment scripts. Do not use workflow `01` to obtain a plan-only run. |
+| Workflow `07` installation | Blocked | The workflow currently contains invalid YAML indentation and an inconsistent inventory path. Correct and validate the workflow before running it. |
+| Workflow `10` removal | Destructive, no plan mode | The workflow has no `test` input and defaults to removing the SAP system. Review every input before dispatch. |
+
+The detailed guides identify these limitations at the affected steps.
+
+## Repository layout
+
+- `.cfg_template`: Terraform variable templates used by creation workflows.
+- `.github/workflows`: GitHub Actions workflows for deployment and removal.
+- `WORKSPACES`: generated and customized deployment configuration.
+- `docs`: detailed setup, deployment, and operations guides.
+
+## References
+
+- [SDAF overview](https://learn.microsoft.com/azure/sap/automation/deployment-framework)
+- [SDAF deployment planning](https://learn.microsoft.com/azure/sap/automation/plan-deployment)
+- [SDAF control-plane configuration](https://learn.microsoft.com/azure/sap/automation/configure-control-plane)
+- [Azure Government developer guidance](https://learn.microsoft.com/azure/azure-government/documentation-government-developer-guide)
+- [Private endpoint DNS zone values](https://learn.microsoft.com/azure/private-link/private-endpoint-dns)
+- [SDAF source](https://github.com/Azure/sap-automation)
+- [SDAF samples](https://github.com/Azure/sap-automation-samples)
