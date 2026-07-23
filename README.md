@@ -14,13 +14,13 @@ The deployment consists of:
 
 Follow the guides in order:
 
-1. [Prerequisites and planning](docs/01-prerequisites.md)
-2. [Bootstrap GitHub and Azure](docs/02-bootstrap.md)
-3. [Create and deploy the control plane](docs/03-control-plane.md)
-4. [Create and deploy a workload zone](docs/04-workload-zone.md)
-5. [Create and deploy an SAP system](docs/05-sap-system.md)
-6. [Download software and install SAP](docs/06-software-installation.md)
-7. [Operations, troubleshooting, and removal](docs/07-operations.md)
+1. [Prerequisites and planning](docs/01-00-prerequisites.md)
+2. [Bootstrap GitHub and Azure](docs/02-00-bootstrap.md)
+3. [Create and deploy the control plane](docs/03-00-control-plane.md)
+4. [Create and deploy a workload zone](docs/04-00-workload-zone.md)
+5. [Create and deploy an SAP system](docs/05-00-sap-system.md)
+6. [Download software and install SAP](docs/06-00-software-installation.md)
+7. [Operations, troubleshooting, and removal](docs/07-00-operations.md)
 
 Do not start with workflow `01`. The bootstrap process and workflow `00` create the GitHub environment, secrets, variables, and Terraform configuration required by later workflows.
 
