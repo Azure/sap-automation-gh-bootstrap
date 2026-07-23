@@ -28,6 +28,11 @@ Review:
 
 Ensure no subnet overlaps with the control plane, connected networks, or other workload zones. Commit approved changes.
 
+When `use_separate_storage_subnet` is `true`, provide either
+`storage_subnet_address_prefix` for a new subnet or `storage_subnet_arm_id` for an
+existing subnet. Otherwise, leave it `false` so storage private endpoints use the
+application subnet.
+
 Private endpoints consume private IP addresses and depend on correct DNS resolution. Confirm
 the required private DNS zones are linked to the control-plane and workload-zone virtual
 networks that need resolution. Service endpoints are subnet-scoped; when private endpoints

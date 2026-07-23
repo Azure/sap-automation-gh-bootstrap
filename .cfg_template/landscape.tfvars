@@ -311,7 +311,8 @@ web_subnet_address_prefix = "10.111.28.0/22"
 # storage_subnet_arm_id is an optional parameter that if provided specifies Azure resource identifier for the existing subnet
 #storage_subnet_arm_id = ""
 
-# storage_subnet_address_prefix is a mandatory parameter if the subnets are not defined in the workload or if existing subnets are not used
+# When use_separate_storage_subnet is true, provide storage_subnet_address_prefix for a new subnet
+# or storage_subnet_arm_id for an existing subnet.
 #storage_subnet_address_prefix = ""
 
 # storage_subnet_nsg_arm_id is an optional parameter that if provided specifies Azure resource identifier for the existing nsg
@@ -320,7 +321,8 @@ web_subnet_address_prefix = "10.111.28.0/22"
 # storage_subnet_nsg_name is an optional parameter and should only be used if the default naming is not acceptable for the network security group name
 #storage_subnet_nsg_name = ""
 
-# use_separate_storage_subnet defines if a separate subnet is used (HANA Scale Out scenario))
+# use_separate_storage_subnet defines if a separate subnet is used (HANA Scale Out scenario).
+# Leave this false to use the application subnet for storage private endpoints.
 #use_separate_storage_subnet = false
 
 #########################################################################################
