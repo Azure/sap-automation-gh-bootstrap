@@ -37,8 +37,9 @@ Private endpoints consume private IP addresses and depend on correct DNS resolut
 the required private DNS zones are linked to the control-plane and workload-zone virtual
 networks that need resolution. Service endpoints are subnet-scoped; when private endpoints
 are enabled, service endpoints do not remove the private endpoint DNS requirements. For
-Azure Government, explicitly uncomment the Government `dns_zone_names` block in the
-generated workload-zone file; Public Azure leaves it commented.
+Public Azure leaves the Government `dns_zone_names` block commented. For Azure Government,
+first implement and validate cloud-specific `azure/login` behavior as described in the
+bootstrap guide, then uncomment the Government block in the generated workload-zone file.
 
 The SDAF `private_endpoint_network_policies` input controls network security group and
 route-table policy support for private endpoints on workload-zone subnets. It defaults to
@@ -64,4 +65,4 @@ state have been validated.
 
 ## Next step
 
-Continue to [Create and deploy an SAP system](05-sap-system.md).
+Continue to [Create and deploy an SAP system](05-00-sap-system.md).

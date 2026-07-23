@@ -204,7 +204,7 @@ dns_label="@@DNS_LABEL@@"
 #shared_access_key_enabled = false
 
 # routing_preference_enabled controls whether routing preferences and route-specific Microsoft endpoints are configured for storage accounts
-routing_preference_enabled = @@ROUTING_PREFERENCE_ENABLED@@
+routing_preference_enabled = "@@ROUTING_PREFERENCE_ENABLED@@"
 
 # data_plane_available indicates if storage account access is via data plane
 #data_plane_available = true

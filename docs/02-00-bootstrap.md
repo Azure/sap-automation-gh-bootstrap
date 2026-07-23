@@ -10,37 +10,31 @@ Use the generated repository as the long-lived home for SDAF configuration. Do n
 
 ## Configure cloud and OIDC behavior
 
-The setup utility detects the active Azure CLI cloud and stores the corresponding `AZURE_ENVIRONMENT` and `AZURE_AUDIENCE` values in the control-plane GitHub environment. Later Azure login steps consume these values, and workflow `02` copies them to workload environments.
+The setup utility uses the active Azure CLI subscription and tenant while creating or reusing
+the deployment identity. It does not create `AZURE_ENVIRONMENT` or `AZURE_AUDIENCE` GitHub
+variables. The current workflows call `azure/login` without cloud-specific `environment` or
+`audience` inputs, and workflow `02` copies neither value to workload environments.
 
-These values select authentication and management endpoints; they do not rewrite Terraform
-Private DNS suffixes. After configuration generation, Azure Government deployments must
-uncomment the Azure Government `dns_zone_names` block in each applicable `WORKSPACES`
-`.tfvars` file. Public Azure deployments leave the block commented and use Terraform
-defaults. See [Azure Government endpoint guidance](https://learn.microsoft.com/azure/azure-government/compare-azure-government-global-azure).
+Consequently, the current implementation uses the Public Azure defaults. Before using these
+workflows with Azure Government, update and validate every `azure/login` step and propagate
+any required cloud-selection values to newly created environments. Cloud-specific login
+support is separate from Terraform Private DNS suffixes: after the login flow is implemented,
+uncomment the Azure Government `dns_zone_names` block in each applicable generated
+`WORKSPACES` `.tfvars` file. See
+[Azure Government endpoint guidance](https://learn.microsoft.com/azure/azure-government/compare-azure-government-global-azure).
 
-Most repositories use the standard OIDC subject `repo:<owner>/<repository>:environment:<environment>`. Some enterprise-managed accounts emit an ID-qualified owner and repository subject. If your organization uses that form, set the subject format before running the setup utility:
-
-# [Windows](#tab/oidc-windows)
-
-```powershell
-$env:SDAF_GITHUB_OIDC_SUBJECT_FORMAT = "enterprise"
-```
-
-# [Linux](#tab/oidc-linux)
-
-```bash
-export SDAF_GITHUB_OIDC_SUBJECT_FORMAT=enterprise
-```
-
----
-
-If the emitted subject uses another form, set `SDAF_GITHUB_OIDC_SUBJECT` to the exact subject printed by `azure/login`. An exact subject overrides the format setting.
+The setup utility creates the standard OIDC subject
+`repo:<owner>/<repository>:environment:<environment>` and the audience
+`api://AzureADTokenExchange`. It does not currently support environment-variable overrides
+for alternate subject formats. If your GitHub organization emits a different subject, update
+and validate the setup utility or edit the federated credential to match the exact subject
+reported by GitHub Actions before deploying.
 
 ## Download and run the setup utility
 
 The entry script imports files from the adjacent `sdaf` package, so the scripts below download the complete [setup utility directory](https://github.com/Azure/sap-automation/tree/main/deploy/scripts/py_scripts/SDAF-GitHub-Actions) rather than only `New-SDAFGitHubActions.py`.
 
-# [Windows](#tab/windows)
+### Windows
 
 Run in PowerShell from a working directory outside the configuration repository:
 
@@ -82,7 +76,7 @@ az account show --output table
 python ./New-SDAFGitHubActions.py
 ```
 
-# [Linux](#tab/linux)
+### Linux
 
 Run in Bash from a working directory outside the configuration repository:
 
@@ -131,8 +125,6 @@ az account show --output table
 python3 ./New-SDAFGitHubActions.py
 ```
 
----
-
 Both scripts use the `main` branch. For a reproducible production setup, replace `main` in `ref=main` with a reviewed SDAF tag or commit SHA.
 
 The utility guides you through these steps:
@@ -175,7 +167,11 @@ For production, pin the SDAF container to a tested release or digest. The utilit
 
 Confirm that repository variables and GitHub App secrets exist, the control-plane environment was created, workflow `00` succeeded, and new deployer and library `.tfvars` files were committed under `WORKSPACES`.
 
-Confirm that the control-plane environment contains `AZURE_ENVIRONMENT` and `AZURE_AUDIENCE`, and that the Entra federated credential subject exactly matches the subject printed by GitHub Actions.
+Confirm that the Entra federated credential issuer, audience, and subject exactly match the
+values emitted by GitHub Actions. For Public Azure, verify that the existing `azure/login`
+steps authenticate successfully with their default cloud settings. For Azure Government,
+do not proceed until cloud-specific action inputs and environment propagation have been
+implemented and validated.
 
 Treat generated files as reviewed configuration snapshots. Customize and commit them before
 deployment; later changes to `.cfg_template` do not retroactively update existing snapshots.
@@ -184,4 +180,4 @@ Secret values cannot be read back from GitHub. Replace a secret if its source va
 
 ## Next step
 
-Continue to [Create and deploy the control plane](03-control-plane.md).
+Continue to [Create and deploy the control plane](03-00-control-plane.md).

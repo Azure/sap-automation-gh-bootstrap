@@ -30,8 +30,10 @@ Validate image and size availability, SAP support, and quota. Commit approved ch
 
 The system normally consumes networking, DNS, credentials, and shared services from its
 workload zone. Use system-level subnet, DNS, or storage overrides only when the approved
-design requires them. For Azure Government, explicitly uncomment the Government
-`dns_zone_names` block in the generated system file; Public Azure leaves it commented.
+design requires them. Public Azure leaves the Government `dns_zone_names` block commented.
+For Azure Government, first implement and validate cloud-specific `azure/login` behavior as
+described in the bootstrap guide, then uncomment the Government block in the generated
+system file.
 
 ## Plan and deploy
 
@@ -48,4 +50,4 @@ Terraform state for later configuration, installation, and removal stages.
 
 ## Next step
 
-Continue to [Download software and install SAP](06-software-installation.md).
+Continue to [Download software and install SAP](06-00-software-installation.md).

@@ -51,4 +51,4 @@ Record the deployed BoM, SDAF version or container digest, Terraform version, An
 
 ## Next step
 
-Continue to [Operations, troubleshooting, and removal](07-operations.md).
+Continue to [Operations, troubleshooting, and removal](07-00-operations.md).

@@ -23,9 +23,18 @@ Secret values cannot be read back from GitHub. Replace a secret if its source is
 
 Check subscription and tenant IDs, client ID, authentication mode, federated credential issuer/audience/subject, environment name, role assignments, and client secret validity when applicable.
 
-For OIDC failures, compare the three values printed by `azure/login` with the Entra federated credential. Issuer, audience, and subject must match exactly. Confirm the selected GitHub environment contains `AZURE_ENVIRONMENT` and `AZURE_AUDIENCE` values for the active Azure CLI cloud.
+For OIDC failures, compare the issuer, audience, and subject emitted by GitHub Actions with
+the Entra federated credential; all three must match exactly. The setup utility does not
+create `AZURE_ENVIRONMENT` or `AZURE_AUDIENCE`, and the current workflows use the Public
+Azure defaults for `azure/login`. If targeting Azure Government, confirm that cloud-specific
+login inputs and environment propagation were implemented consistently before troubleshooting
+the federated credential itself.
 
-If the subject includes numeric owner and repository IDs, rerun the current setup utility with `SDAF_GITHUB_OIDC_SUBJECT_FORMAT=enterprise`. For any other subject form, set `SDAF_GITHUB_OIDC_SUBJECT` to the exact emitted value. The utility updates the existing `GitHubActions` credential.
+The current setup utility always creates
+`repo:<owner>/<repository>:environment:<environment>`. It does not implement
+`SDAF_GITHUB_OIDC_SUBJECT_FORMAT` or `SDAF_GITHUB_OIDC_SUBJECT` overrides. If GitHub emits a
+different subject, update and validate the setup utility or edit the `GitHubActions`
+federated credential to match the exact emitted value.
 
 ## Self-hosted runner is offline
 

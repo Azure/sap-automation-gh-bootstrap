@@ -49,6 +49,12 @@ service availability. Review the
 [Azure Government developer guide](https://learn.microsoft.com/azure/azure-government/documentation-government-developer-guide)
 before bootstrap.
 
+> [!IMPORTANT]
+> Selecting `AzureUSGovernment` in Azure CLI does not configure the GitHub Actions workflows.
+> The current `azure/login` steps use Public Azure defaults. Add and validate the action's
+> cloud-specific `environment` and `audience` inputs throughout the workflow set before using
+> this repository for Azure Government.
+
 ### Bootstrap operator permissions
 
 The person running bootstrap needs permission to create or manage resource groups, identities or app registrations, federated credentials, and role assignments. In many organizations this requires suitable Microsoft Entra directory permissions plus `Owner`, or `Contributor` together with `User Access Administrator`, at the target Azure scope. Coordinate the exact access with your Azure administrator.
@@ -97,4 +103,4 @@ Agree on subscriptions, regions, network address spaces, connectivity, DNS, VM s
 
 ## Next step
 
-Continue to [Bootstrap GitHub and Azure](02-bootstrap.md).
+Continue to [Bootstrap GitHub and Azure](02-00-bootstrap.md).

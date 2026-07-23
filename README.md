@@ -2,6 +2,12 @@
 
 This repository is a configuration and workflow template for deploying SAP on Azure with the [SAP Deployment Automation Framework (SDAF)](https://github.com/Azure/sap-automation). SDAF uses Terraform to deploy infrastructure and Ansible to configure operating systems and install SAP software.
 
+## Related repositories
+
+- [`Azure/sap-automation`](https://github.com/Azure/sap-automation) contains the core SDAF Terraform, Ansible, scripts, and setup utility consumed by these workflows.
+- [`Azure/sap-automation-gh-bootstrap`](https://github.com/Azure/sap-automation-gh-bootstrap) (this repository) provides the GitHub Actions workflows and configuration templates.
+- [`Azure/sap-automation-bootstrap`](https://github.com/Azure/sap-automation-bootstrap) is the Azure DevOps configuration counterpart. Keep equivalent operator guidance aligned when behavior applies to both bootstrap experiences.
+
 The deployment consists of:
 
 1. A **control plane** containing the deployer virtual machine, SAP library, Terraform state, credentials, and self-hosted GitHub Actions runner.
@@ -63,11 +69,17 @@ default unless explicitly labeled as an example or cloud-specific override; comm
 identify required values that SDAF scripts inject at deployment time.
 
 Each template contains one commented `dns_zone_names` block with Azure Government values.
-When deploying to `AzureUSGovernment`, explicitly uncomment that entire block. For Public
-Azure, leave it commented because Terraform already supplies the Public Azure DNS zone
-names by default. Do not add a redundant Public Azure assignment or enable multiple blocks.
-The GitHub environment's `AZURE_ENVIRONMENT` selects Azure authentication endpoints; the
-`dns_zone_names` override separately selects the Private DNS suffixes used by Terraform.
+For Public Azure, leave it commented because Terraform already supplies the Public Azure DNS
+zone names by default. Do not add a redundant Public Azure assignment or enable multiple
+blocks.
+
+The current workflows call `azure/login` without its cloud-specific `environment` or
+`audience` inputs. The setup utility also does not create `AZURE_ENVIRONMENT` or
+`AZURE_AUDIENCE` GitHub variables. Therefore, the repository currently implements the
+Public Azure login defaults. Before using these workflows with Azure Government, add and
+validate cloud-specific login behavior across every Azure login step and environment-copy
+workflow. After that support is in place, uncomment the Government `dns_zone_names` block
+in each applicable generated configuration to select the Terraform Private DNS suffixes.
 
 Deployment is intentionally staged. Later workflows consume the approved `WORKSPACES`
 configuration and Terraform state persisted by the SAP library, so complete and validate
@@ -82,6 +94,7 @@ This repository is an evolving template. Review these limitations before using i
 | Workflow `01` dry run | Not operational | The `test` input is not forwarded to the deployment scripts. Do not use workflow `01` to obtain a plan-only run. |
 | Workflow `07` installation | Blocked | The workflow currently contains invalid YAML indentation and an inconsistent inventory path. Correct and validate the workflow before running it. |
 | Workflow `10` removal | Destructive, no plan mode | The workflow has no `test` input and defaults to removing the SAP system. Review every input before dispatch. |
+| Azure Government login | Not implemented | `azure/login` uses Public Azure defaults and the setup utility does not create cloud-selection variables. Add and validate cloud-specific login inputs before using the workflows with Azure Government. |
 
 The detailed guides identify these limitations at the affected steps.
 

@@ -673,7 +673,7 @@ ANF_HANA_use_Zones = true
 #ANF_HANA_shared_use_existing = false
 
 # ANF_HANA_shared_volume_name, if defined, provides the name of the HANA shared volume(s).
-#ANF_HANA_shared_volume_name = 512
+#ANF_HANA_shared_volume_name = "shared"
 
 
 #########################################################################################

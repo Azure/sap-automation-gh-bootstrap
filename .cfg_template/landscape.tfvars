@@ -647,7 +647,7 @@ use_AFS_for_shared_storage = true
 #ANF_transport_volume_use_existing = false
 
 # ANF_transport_volume_name is the name of the transport volume
-#ANF_transport_volume_name = false
+#ANF_transport_volume_name = "transport"
 
 # ANF_transport_volume_throughput is the throughput for the transport volume
 #ANF_transport_volume_throughput = 128

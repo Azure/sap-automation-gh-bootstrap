@@ -27,9 +27,10 @@ Commit approved changes before running workflow `01`.
 
 Non-commented values are required workflow substitutions or deliberate configuration.
 Commented values are optional defaults, examples, or values injected by SDAF scripts as
-identified in the template comments. For Azure Government, explicitly uncomment the
-Government `dns_zone_names` block in both generated files; Public Azure uses Terraform
-defaults and leaves it commented.
+identified in the template comments. Public Azure uses Terraform DNS defaults and leaves the
+Government `dns_zone_names` block commented. For Azure Government, first implement and
+validate cloud-specific `azure/login` behavior as described in the bootstrap guide, then
+uncomment the Government block in both generated files.
 
 Verify private DNS zones and virtual network links cover every network that must resolve
 private endpoints. If service endpoints are selected instead, verify the required services
@@ -62,4 +63,4 @@ Open **Settings** > **Actions** > **Runners** and confirm the runner is **Online
 
 ## Next step
 
-Continue to [Create and deploy a workload zone](04-workload-zone.md).
+Continue to [Create and deploy a workload zone](04-00-workload-zone.md).
