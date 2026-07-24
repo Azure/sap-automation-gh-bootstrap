@@ -57,6 +57,13 @@ jobs:
           use_msi=${{ github.event.inputs.use_msi }}
           msi_id=${{ github.event.inputs.msi_id }}
           use_webapp=${{ github.event.inputs.use_webapp }}
+          routing_preference_enabled=true
+
+          case "${region_code}" in
+            USAR|USTE|USVI)
+              routing_preference_enabled=false
+              ;;
+          esac
 
           pushd /source/deploy/terraform/terraform-units/modules/sap_namegenerator
           region=$(echo "{ for k, v in var.region_mapping : v => k }[\"${region_code_lower}\"]" | terraform console | tr -d '"')
@@ -100,6 +107,7 @@ jobs:
             | sed "s|@@ENV@@|${environment}|g" \
             | sed "s|@@REGION@@|${region}|g" \
             | sed "s|@@DNS_LABEL@@|${dns_label}|g" \
+            | sed "s|@@ROUTING_PREFERENCE_ENABLED@@|${routing_preference_enabled}|g" \
             > WORKSPACES/LIBRARY/${library_name^^}/${library_name^^}.tfvars
 
           # Update the environment in the issue-closed workflow
