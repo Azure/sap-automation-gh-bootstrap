@@ -10,7 +10,10 @@ state before retrying.
 ## A creation workflow does not commit configuration
 
 1. Confirm that the repository default branch is `main`.
-2. Confirm that the GitHub App token can write repository contents and workflows.
+2. Confirm that workflow permissions allow the built-in `GITHUB_TOKEN` to
+   write repository contents, and review branch-protection requirements. The
+   GitHub App token supports GitHub API operations such as environment setup;
+   it is not the token used for these configuration commits.
 3. Inspect the failed run for workflow `00`, `02`, or `04`.
 4. Check whether another commit reached `main` before the workflow push.
 5. Resolve the branch conflict, then rerun only the failed creation workflow.
