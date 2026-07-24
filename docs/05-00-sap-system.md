@@ -1,6 +1,25 @@
 # Create and deploy an SAP system
 
-An SAP system deployment creates the database, central services, application servers, storage, load balancers, and supporting resources for one SAP SID.
+[Central SDAF hub](https://github.com/Azure/sap-automation) |
+[Previous: Workload zone](04-00-workload-zone.md) |
+[Troubleshooting](troubleshooting.md)
+
+## Outcome
+
+You have validated infrastructure for one SAP system ID (SID), including the database,
+central services, application servers, storage, load balancers, and supporting resources.
+
+## Before you begin
+
+Verify that the workload zone is healthy and its Terraform state is available. Record the
+approved workload-zone environment, three-character SID, topology, BoM, sizing, and
+configuration commit.
+
+## Inputs
+
+- A three-character SAP SID.
+- The existing workload-zone GitHub environment.
+- The approved system topology, images, sizes, storage, network, and installation settings.
 
 ## Create system configuration
 
@@ -10,6 +29,9 @@ Workflow `04` uses `.cfg_template/system.tfvars` to generate and commit
 `WORKSPACES/SYSTEM/<workload-zone>-<sid>/<workload-zone>-<sid>.tfvars`. The generated file
 is the Terraform deployment input and may be customized after creation. Workflow `05`
 binds the selected workload-zone environment and uses its Azure credentials for deployment.
+
+Despite its display name, workflow `04` does not create a GitHub environment. It runs on a
+GitHub-hosted runner and commits only the SAP-system `WORKSPACES` configuration to `main`.
 
 ## Review system configuration
 
@@ -41,12 +63,21 @@ system file.
 2. Enter the same SAP SID and select the workload-zone environment.
 3. Enable **Test deployment without applying changes**.
 4. Review the Terraform plan.
-5. Run workflow `05` again with test mode disabled.
+5. Confirm that the plan uses the approved `WORKSPACES/SYSTEM` file and configuration
+   commit.
+6. Run workflow `05` again with test mode disabled.
 
 Confirm expected VMs, disks, NICs, load balancers, and storage; validate deployer connectivity, DNS, Key Vault credentials, and Terraform state. Do not begin installation until infrastructure validation succeeds.
 
 Keep the generated system configuration in version control and preserve its associated
 Terraform state for later configuration, installation, and removal stages.
+
+## If deployment fails
+
+Resolve the first actionable configuration, identity, quota, image, storage, network, DNS,
+or state error. Preserve the system configuration and state, rerun test mode, and review
+the replacement plan before apply. Do not run concurrent workflows against the system
+state. See [Troubleshoot GitHub Actions deployments](troubleshooting.md).
 
 ## Next step
 

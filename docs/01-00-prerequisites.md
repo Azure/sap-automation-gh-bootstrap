@@ -1,5 +1,21 @@
 # Prerequisites and planning
 
+[Central SDAF hub](https://github.com/Azure/sap-automation) |
+[GitHub Actions journey](../README.md) |
+[Troubleshooting](troubleshooting.md)
+
+## Outcome
+
+You have an approved architecture, the required GitHub and Azure permissions, and a
+workstation that can run the core SDAF setup utility.
+
+## Before you begin
+
+Choose GitHub Actions as the execution model after reviewing the available paths in the
+[central SDAF hub](https://github.com/Azure/sap-automation). GitHub Actions requires
+repository administration, a GitHub App, GitHub environments, and deployment runners.
+Azure DevOps and local execution use different bootstrap and execution hosts.
+
 Complete the following checks before configuring GitHub Actions or deploying Azure resources.
 
 ## GitHub requirements
@@ -19,7 +35,8 @@ Ensure that GitHub Issues are enabled, the repository plan supports environments
 
 ## Local tools
 
-Install Python 3.10 or later, Git, and Azure CLI. Verify them with:
+Install Python 3.10 or later, Git, and Azure CLI. Run these commands in PowerShell on the
+workstation that will run the setup utility:
 
 ```powershell
 python --version
@@ -29,8 +46,8 @@ az version
 
 ## Azure access
 
-Select the target Azure cloud before signing in. Use `AzureCloud` for Public Azure or
-`AzureUSGovernment` for Azure Government:
+In PowerShell on the setup workstation, select the target Azure cloud before signing in.
+Use `AzureCloud` for Public Azure or `AzureUSGovernment` for Azure Government:
 
 ```powershell
 az cloud set --name <AzureCloud-or-AzureUSGovernment>
@@ -100,6 +117,27 @@ and [virtual network service endpoints](https://learn.microsoft.com/azure/virtua
 The templates are examples, not an approved production architecture. Defaults can create virtual machines, Azure Firewall, Bastion, storage, Key Vault, App Configuration, and private endpoints.
 
 Agree on subscriptions, regions, network address spaces, connectivity, DNS, VM sizing, high availability, storage, security policy, monitoring, backup, and resource retention before continuing.
+
+## Validate readiness
+
+1. Record the approved repository owner, repository name, default branch, control-plane
+   name, Azure tenant, subscription, region, identity model, and network ranges.
+2. Verify that the GitHub administrator can install an App and manage environments,
+   secrets, variables, workflows, and runners.
+3. Verify that the Azure bootstrap operator can create or reuse identities and assign the
+   approved roles at the approved scopes.
+4. Run the tool-version commands and confirm that Python, Git, and Azure CLI are available.
+5. Confirm quota, image availability, DNS, routing, firewall, SAP download access, and cost
+   approval.
+
+Do not continue until each result is recorded and approved.
+
+## If a readiness check fails
+
+Resolve the missing permission, quota, connectivity, or design decision before bootstrap.
+Do not compensate by granting broad permanent access. See
+[Troubleshoot GitHub Actions deployments](troubleshooting.md) for the first diagnostic
+locations.
 
 ## Next step
 
