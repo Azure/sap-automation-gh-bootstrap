@@ -161,7 +161,7 @@ jobs:
           BOM:                                    ${{ inputs.bom_override_name != '' && inputs.bom_override_name || format('{0}-{1}-{2}-{3}', inputs.application_bom_base_name, inputs.db_bom_base_name, inputs.kernel_bom_base_name, inputs.bom_save_name) }}
           CONTROL_PLANE_NAME:                     ${{ inputs.control_plane_name }}
           DEPLOYER_KEYVAULT:                      ${{ vars.DEPLOYER_KEYVAULT }}
-          CHECK_STORAGE_ACCOUNT:                  ${{ inputs.re_download == 'true' && 'false' || 'true' }}
+          CHECK_STORAGE_ACCOUNT:                  ${{ inputs.re_download && 'false' || 'true' }}
           ARM_CLIENT_ID:                          ${{ vars.ARM_CLIENT_ID }}
           ARM_CLIENT_SECRET:                      ${{ secrets.ARM_CLIENT_SECRET }}
           ARM_SUBSCRIPTION_ID:                    ${{ vars.ARM_SUBSCRIPTION_ID }}
