@@ -92,13 +92,12 @@ For Public Azure, leave it commented because Terraform already supplies the Publ
 zone names by default. Do not add a redundant Public Azure assignment or enable multiple
 blocks.
 
-The current workflows call `azure/login` without its cloud-specific `environment` or
-`audience` inputs. The setup utility also does not create `AZURE_ENVIRONMENT` or
-`AZURE_AUDIENCE` GitHub variables. Therefore, the repository currently implements the
-Public Azure login defaults. Before using these workflows with Azure Government, add and
-validate cloud-specific login behavior across every Azure login step and environment-copy
-workflow. After that support is in place, uncomment the Government `dns_zone_names` block
-in each applicable generated configuration to select the Terraform Private DNS suffixes.
+Set the repository variables `ARM_ENVIRONMENT`, `AZURE_ENVIRONMENT`, and `AZURE_AUDIENCE`
+before creating environments. Workflow `00` copies them to the control-plane environment,
+and workflow `02` propagates them to workload environments. Public Azure defaults are
+`public`, `AzureCloud`, and `api://AzureADTokenExchange`. For Azure Government, use
+`usgovernment`, `AzureUSGovernment`, and `api://AzureADTokenExchangeUSGov`, then uncomment
+the Government `dns_zone_names` block in each applicable generated configuration.
 
 Deployment is intentionally staged. Later workflows consume the approved `WORKSPACES`
 configuration and Terraform state persisted by the SAP library, so complete and validate

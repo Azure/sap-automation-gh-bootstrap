@@ -36,15 +36,14 @@ Use the generated repository as the long-lived home for SDAF configuration. Do n
 
 ## Configure cloud and OIDC behavior
 
-The setup utility uses the active Azure CLI subscription and tenant while creating or reusing
-the deployment identity. It does not create `AZURE_ENVIRONMENT` or `AZURE_AUDIENCE` GitHub
-variables. The current workflows call `azure/login` without cloud-specific `environment` or
-`audience` inputs, and workflow `02` copies neither value to workload environments.
+Configure the repository variables `ARM_ENVIRONMENT`, `AZURE_ENVIRONMENT`, and
+`AZURE_AUDIENCE` before running workflow `00`. That workflow copies the values to the new
+control-plane environment, and workflow `02` propagates them to workload environments.
 
-Consequently, the current implementation uses the Public Azure defaults. Before using these
-workflows with Azure Government, update and validate every `azure/login` step and propagate
-any required cloud-selection values to newly created environments. Cloud-specific login
-support is separate from Terraform Private DNS suffixes: after the login flow is implemented,
+For Public Azure, use `public`, `AzureCloud`, and `api://AzureADTokenExchange`. For Azure
+Government, use `usgovernment`, `AzureUSGovernment`, and
+`api://AzureADTokenExchangeUSGov`. Cloud-specific login support is separate from Terraform
+Private DNS suffixes: after configuring the login values,
 uncomment the Azure Government `dns_zone_names` block in each applicable generated
 `WORKSPACES` `.tfvars` file. See
 [Azure Government endpoint guidance](https://learn.microsoft.com/azure/azure-government/compare-azure-government-global-azure).

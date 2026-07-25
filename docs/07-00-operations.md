@@ -39,11 +39,10 @@ Secret values cannot be read back from GitHub. Replace a secret if its source is
 Check subscription and tenant IDs, client ID, authentication mode, federated credential issuer/audience/subject, environment name, role assignments, and client secret validity when applicable.
 
 For OIDC failures, compare the issuer, audience, and subject emitted by GitHub Actions with
-the Entra federated credential; all three must match exactly. The setup utility does not
-create `AZURE_ENVIRONMENT` or `AZURE_AUDIENCE`, and the current workflows use the Public
-Azure defaults for `azure/login`. If targeting Azure Government, confirm that cloud-specific
-login inputs and environment propagation were implemented consistently before troubleshooting
-the federated credential itself.
+the Entra federated credential; all three must match exactly. Verify that `ARM_ENVIRONMENT`,
+`AZURE_ENVIRONMENT`, and `AZURE_AUDIENCE` are set at the repository level and were copied to
+the selected GitHub environment. Azure Government uses `usgovernment`,
+`AzureUSGovernment`, and `api://AzureADTokenExchangeUSGov`.
 
 The current setup utility always creates
 `repo:<owner>/<repository>:environment:<environment>`. It does not implement
