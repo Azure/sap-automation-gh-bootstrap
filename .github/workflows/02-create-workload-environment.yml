@@ -99,9 +99,12 @@ jobs:
 
           # Set variables
           gh variable set ARM_CLIENT_ID --body "${{ vars.ARM_CLIENT_ID }}" --env ${WORKLOAD_ZONE_NAME}
+          gh variable set ARM_ENVIRONMENT --body "${{ vars.ARM_ENVIRONMENT || 'public' }}" --env ${WORKLOAD_ZONE_NAME}
           gh variable set ARM_SUBSCRIPTION_ID --body "${{ vars.ARM_SUBSCRIPTION_ID }}" --env ${WORKLOAD_ZONE_NAME}
           gh variable set ARM_TENANT_ID --body "${{ vars.ARM_TENANT_ID }}" --env ${WORKLOAD_ZONE_NAME}
           gh variable set ARM_OBJECT_ID --body "${{ vars.ARM_OBJECT_ID }}" --env ${WORKLOAD_ZONE_NAME}
+          gh variable set AZURE_ENVIRONMENT --body "${{ vars.AZURE_ENVIRONMENT || 'AzureCloud' }}" --env ${WORKLOAD_ZONE_NAME}
+          gh variable set AZURE_AUDIENCE --body "${{ vars.AZURE_AUDIENCE || 'api://AzureADTokenExchange' }}" --env ${WORKLOAD_ZONE_NAME}
           gh variable set APPLICATION_CONFIGURATION_NAME --body "${{ vars.APPLICATION_CONFIGURATION_NAME }}" --env ${WORKLOAD_ZONE_NAME}
           gh variable set DEPLOYER_KEYVAULT --body "${{ vars.DEPLOYER_KEYVAULT }}" --env ${WORKLOAD_ZONE_NAME}
           gh variable set CONTROL_PLANE_NAME --body "${{ vars.CONTROL_PLANE_NAME }}" --env ${WORKLOAD_ZONE_NAME}

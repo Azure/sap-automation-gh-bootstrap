@@ -1,6 +1,32 @@
 # Bootstrap GitHub and Azure
 
-The [SDAF GitHub Actions setup utility](https://github.com/Azure/sap-automation/tree/main/deploy/scripts/py_scripts/SDAF-GitHub-Actions) creates the GitHub App, repository settings, Azure identity, and first control-plane environment. See its [upstream README](https://github.com/Azure/sap-automation/blob/main/deploy/scripts/py_scripts/SDAF-GitHub-Actions/README.md) for the source documentation.
+[Central SDAF hub](https://github.com/Azure/sap-automation) |
+[Previous: Prerequisites and planning](01-00-prerequisites.md) |
+[Troubleshooting](troubleshooting.md)
+
+## Outcome
+
+You have a customer configuration repository with the GitHub App, repository settings,
+Azure identity, control-plane environment, secrets, variables, and initial `WORKSPACES`
+configuration required by the deployment workflows.
+
+## Ownership boundary
+
+The [SDAF GitHub Actions setup utility](https://github.com/Azure/sap-automation/tree/main/deploy/scripts/py_scripts/SDAF-GitHub-Actions)
+in the core `Azure/sap-automation` repository creates the GitHub App, repository settings,
+Azure identity, and first control-plane environment. This repository owns the customer
+configuration templates and workflows that the utility configures. The core repository
+also owns the deployer and self-hosted runner implementation.
+
+See the setup utility's
+[upstream README](https://github.com/Azure/sap-automation/blob/main/deploy/scripts/py_scripts/SDAF-GitHub-Actions/README.md)
+for its source documentation.
+
+## Before you begin
+
+Complete [Prerequisites and planning](01-00-prerequisites.md). Record the reviewed SDAF
+tag or commit, target repository, control-plane name, Azure tenant and subscription,
+authentication method, and approved role assignments.
 
 ## Create the configuration repository
 
@@ -10,15 +36,14 @@ Use the generated repository as the long-lived home for SDAF configuration. Do n
 
 ## Configure cloud and OIDC behavior
 
-The setup utility uses the active Azure CLI subscription and tenant while creating or reusing
-the deployment identity. It does not create `AZURE_ENVIRONMENT` or `AZURE_AUDIENCE` GitHub
-variables. The current workflows call `azure/login` without cloud-specific `environment` or
-`audience` inputs, and workflow `02` copies neither value to workload environments.
+Configure the repository variables `ARM_ENVIRONMENT`, `AZURE_ENVIRONMENT`, and
+`AZURE_AUDIENCE` before running workflow `00`. That workflow copies the values to the new
+control-plane environment, and workflow `02` propagates them to workload environments.
 
-Consequently, the current implementation uses the Public Azure defaults. Before using these
-workflows with Azure Government, update and validate every `azure/login` step and propagate
-any required cloud-selection values to newly created environments. Cloud-specific login
-support is separate from Terraform Private DNS suffixes: after the login flow is implemented,
+For Public Azure, use `public`, `AzureCloud`, and `api://AzureADTokenExchange`. For Azure
+Government, use `usgovernment`, `AzureUSGovernment`, and
+`api://AzureADTokenExchangeUSGov`. Cloud-specific login support is separate from Terraform
+Private DNS suffixes: after configuring the login values,
 uncomment the Azure Government `dns_zone_names` block in each applicable generated
 `WORKSPACES` `.tfvars` file. See
 [Azure Government endpoint guidance](https://learn.microsoft.com/azure/azure-government/compare-azure-government-global-azure).
@@ -29,6 +54,15 @@ The setup utility creates the standard OIDC subject
 for alternate subject formats. If your GitHub organization emits a different subject, update
 and validate the setup utility or edit the federated credential to match the exact subject
 reported by GitHub Actions before deploying.
+
+## Review before execution
+
+1. Verify that the setup utility comes from the reviewed SDAF tag or commit.
+2. Review the GitHub App permissions, PAT scopes, Azure role assignments, identity type,
+   federated credential subject, and target repository.
+3. Confirm that the repository default branch is `main` and that workflow permissions
+   allow the utility and creation workflows to commit configuration.
+4. Confirm that no credentials will be written to tracked files or shell history.
 
 ## Download and run the setup utility
 
@@ -165,7 +199,12 @@ For production, pin the SDAF container to a tested release or digest. The utilit
 
 ## Verify bootstrap
 
-Confirm that repository variables and GitHub App secrets exist, the control-plane environment was created, workflow `00` succeeded, and new deployer and library `.tfvars` files were committed under `WORKSPACES`.
+1. Confirm that the expected repository variables and GitHub App secrets exist.
+2. Confirm that the control-plane environment exists and contains the expected variables
+   and secrets.
+3. Confirm that workflow `00` succeeded.
+4. Confirm that deployer and library `.tfvars` files were committed under `WORKSPACES`.
+5. Record the configuration commit, reviewed SDAF version, identity, and environment name.
 
 Confirm that the Entra federated credential issuer, audience, and subject exactly match the
 values emitted by GitHub Actions. For Public Azure, verify that the existing `azure/login`
@@ -177,6 +216,14 @@ Treat generated files as reviewed configuration snapshots. Customize and commit 
 deployment; later changes to `.cfg_template` do not retroactively update existing snapshots.
 
 Secret values cannot be read back from GitHub. Replace a secret if its source value is unknown.
+
+## If bootstrap fails
+
+Do not rerun the utility without reviewing what it already created. Inspect its terminal
+output, the workflow `00` run, repository settings, GitHub App installation, environment
+values, federated credential, and Azure role assignments. Reuse or remove partial resources
+only after you identify the failed step. See
+[Troubleshoot GitHub Actions deployments](troubleshooting.md).
 
 ## Next step
 

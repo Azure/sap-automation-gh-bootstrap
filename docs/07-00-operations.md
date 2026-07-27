@@ -1,5 +1,20 @@
 # Operations, troubleshooting, and removal
 
+[Central SDAF hub](https://github.com/Azure/sap-automation) |
+[Previous: Software and installation](06-00-software-installation.md) |
+[Detailed troubleshooting](troubleshooting.md)
+
+## Outcome
+
+You can operate, diagnose, recover, and remove an SDAF deployment without bypassing
+Terraform state or dependency order.
+
+## Before you begin
+
+Record the configuration commit, pinned SDAF image, Terraform and Ansible versions,
+workflow runs, state keys, backups, and current health of every deployed layer. Require
+independent approval before a destructive workflow.
+
 ## Operating practices
 
 - Review every workflow summary before starting the next stage.
@@ -24,11 +39,10 @@ Secret values cannot be read back from GitHub. Replace a secret if its source is
 Check subscription and tenant IDs, client ID, authentication mode, federated credential issuer/audience/subject, environment name, role assignments, and client secret validity when applicable.
 
 For OIDC failures, compare the issuer, audience, and subject emitted by GitHub Actions with
-the Entra federated credential; all three must match exactly. The setup utility does not
-create `AZURE_ENVIRONMENT` or `AZURE_AUDIENCE`, and the current workflows use the Public
-Azure defaults for `azure/login`. If targeting Azure Government, confirm that cloud-specific
-login inputs and environment propagation were implemented consistently before troubleshooting
-the federated credential itself.
+the Entra federated credential; all three must match exactly. Verify that `ARM_ENVIRONMENT`,
+`AZURE_ENVIRONMENT`, and `AZURE_AUDIENCE` are set at the repository level and were copied to
+the selected GitHub environment. Azure Government uses `usgovernment`,
+`AzureUSGovernment`, and `api://AzureADTokenExchangeUSGov`.
 
 The current setup utility always creates
 `repo:<owner>/<repository>:environment:<environment>`. It does not implement
@@ -57,6 +71,9 @@ Read the first actionable error, confirm the expected configuration commit and e
 
 Avoid manually deleting resources managed by Terraform unless the recovery procedure requires it; manual deletion can create state drift.
 
+Use [Troubleshoot GitHub Actions deployments](troubleshooting.md) for generation,
+authentication, runner, BoM, installation, and branch-conflict symptoms.
+
 ## Removal order
 
 Remove resources in reverse dependency order:
@@ -80,10 +97,33 @@ Use these input combinations only after independent review and approval:
 
 Do not enable both options unless removing both layers in one run is intentional and the dependency order has been independently validated. Workload-zone removal also currently passes `vars.MSI_ID` as `ARM_CLIENT_ID`, unlike the other jobs; verify or correct that identity configuration before use.
 
-Use workflow `11 - Remove Control Plane` only after all dependent systems and workload zones are gone. Unlike workflow `10`, workflow `11` exposes a `test` input and forwards it to the external SDAF removal scripts as `TEST_ONLY`. Validate that end-to-end behavior against the pinned SDAF version before relying on it as a safe plan-only path.
+Use `.github/workflows/12-remove-control-plane.yml`, displayed in GitHub Actions as
+`11 - Remove Control Plane`, only after all dependent systems and workload zones are gone.
+Unlike workflow `10`, this workflow exposes a `test` input and forwards it to the external
+SDAF removal scripts as `TEST_ONLY`. Validate that end-to-end behavior against the pinned
+SDAF version before relying on it as a safe plan-only path.
 
 For both removal workflows, inspect the inputs, Terraform state, resource locks, retained storage, and recovery requirements before dispatch.
 
+## Validate removal
+
+1. Confirm that the workflow removed only the approved layer.
+2. Confirm that retained data, storage, logs, and deployment evidence remain available as
+   required.
+3. Verify Terraform state and GitHub environments before removing the next dependency
+   layer.
+4. Record the workflow run, approval, state disposition, and any manually retained
+   resources.
+
+## If removal fails
+
+Do not start another removal workflow or manually delete resources. Review the failed core
+script, current state, locks, and remaining resources. Correct the cause, confirm the same
+input scope, and retry only after independent review. See
+[Troubleshoot GitHub Actions deployments](troubleshooting.md).
+
 ## Return to overview
 
-Return to the [repository README](../README.md).
+Return to the [repository README](../README.md), or use the
+[central SDAF hub](https://github.com/Azure/sap-automation) to choose another execution
+model.

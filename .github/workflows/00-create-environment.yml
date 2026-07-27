@@ -85,6 +85,10 @@ jobs:
             -H "X-GitHub-Api-Version: 2022-11-28" \
             ${url_to_call})
 
+          gh variable set ARM_ENVIRONMENT --body "${{ vars.ARM_ENVIRONMENT || 'public' }}" --env ${CONTROL_PLANE_NAME}
+          gh variable set AZURE_ENVIRONMENT --body "${{ vars.AZURE_ENVIRONMENT || 'AzureCloud' }}" --env ${CONTROL_PLANE_NAME}
+          gh variable set AZURE_AUDIENCE --body "${{ vars.AZURE_AUDIENCE || 'api://AzureADTokenExchange' }}" --env ${CONTROL_PLANE_NAME}
+
           mkdir -p WORKSPACES/DEPLOYER/${deployer_name^^}
           mkdir -p WORKSPACES/LIBRARY/${library_name^^}
 

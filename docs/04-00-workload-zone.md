@@ -1,6 +1,25 @@
 # Create and deploy a workload zone
 
-A workload zone provides shared networking, storage, credentials, and services for one or more SAP systems.
+[Central SDAF hub](https://github.com/Azure/sap-automation) |
+[Previous: Control plane](03-00-control-plane.md) |
+[Troubleshooting](troubleshooting.md)
+
+## Outcome
+
+You have a validated workload zone that provides shared networking, storage, credentials,
+and services for one or more SAP systems.
+
+## Before you begin
+
+Verify that the control plane and self-hosted runner are healthy. Record the approved
+control-plane environment, workload-zone name, subscription, network ranges, DNS design,
+and configuration commit.
+
+## Inputs
+
+- A workload-zone name in `ENV-LOCA-VNET` format.
+- The managing control-plane environment.
+- Approved network, DNS, storage, Key Vault, monitoring, and identity settings.
 
 ## Create the workload environment
 
@@ -37,7 +56,7 @@ Private endpoints consume private IP addresses and depend on correct DNS resolut
 the required private DNS zones are linked to the control-plane and workload-zone virtual
 networks that need resolution. Service endpoints are subnet-scoped; when private endpoints
 are enabled, service endpoints do not remove the private endpoint DNS requirements. For
-Public Azure leaves the Government `dns_zone_names` block commented. For Azure Government,
+Public Azure, leave the Government `dns_zone_names` block commented. For Azure Government,
 first implement and validate cloud-specific `azure/login` behavior as described in the
 bootstrap guide, then uncomment the Government block in the generated workload-zone file.
 
@@ -56,12 +75,22 @@ or resource scopes, including any separate DNS subscription or resource group.
 1. Select workflow **03 - Deploy SAP Workload Zone**.
 2. Choose the workload-zone and control-plane environments.
 3. Enable the test option and review the Terraform plan.
-4. Run workflow `03` again with the test option disabled.
+4. Confirm that the plan uses the approved `WORKSPACES/LANDSCAPE` file and configuration
+   commit.
+5. Run workflow `03` again with the test option disabled.
 
 The deployment runs on the self-hosted deployer runner. Confirm the expected resource group, VNet, subnets, storage, and Key Vault exist; verify peering, DNS, routes, private endpoint resolution, and Terraform state.
 
 Do not create SAP systems until the workload-zone deployment and its persisted Terraform
 state have been validated.
+
+## If deployment fails
+
+Read the first actionable workflow error. Resolve configuration, identity, quota, policy,
+peering, DNS, route, or private endpoint failures before rerunning. Preserve the
+`WORKSPACES/LANDSCAPE` file and Terraform state, rerun test mode, and review the new plan.
+Do not run concurrent workflows against the workload-zone state. See
+[Troubleshoot GitHub Actions deployments](troubleshooting.md).
 
 ## Next step
 

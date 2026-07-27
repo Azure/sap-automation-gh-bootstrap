@@ -1,6 +1,26 @@
 # Create and deploy the control plane
 
-The control plane contains the deployer virtual machine, SAP library, shared deployment state, credentials, and self-hosted GitHub Actions runner.
+[Central SDAF hub](https://github.com/Azure/sap-automation) |
+[Previous: Bootstrap GitHub and Azure](02-00-bootstrap.md) |
+[Troubleshooting](troubleshooting.md)
+
+## Outcome
+
+You have a validated SDAF control plane containing the deployer virtual machine, SAP
+library, shared Terraform state, credentials, and self-hosted GitHub Actions runner.
+
+## Before you begin
+
+Verify that bootstrap completed, workflow `00` committed the deployer and library
+configuration, and the configuration commit is approved. Record the control-plane
+environment name and the reviewed SDAF container tag or digest.
+
+## Inputs
+
+- The control-plane GitHub environment.
+- The generated deployer and library `.tfvars` files under `WORKSPACES`.
+- The approved Azure identity, network, DNS, sizing, storage, and optional web application
+  decisions.
 
 ## Create the environment and configuration
 
@@ -49,7 +69,14 @@ Before using this workflow in a deployment, update and test the implementation s
 
 ## Deploy the control plane
 
-After the control-plane plan has been reviewed through a validated process, run workflow `01` to deploy.
+After the control-plane plan has been reviewed through a validated process:
+
+1. Open **Actions** and select **01 - Deploy Control Plane**.
+2. Select the approved control-plane environment.
+3. Leave **Perform a dry-run validation** disabled because the current implementation does
+   not provide a plan-only safety gate.
+4. Review all inputs and the selected configuration commit.
+5. Run the workflow and monitor the GitHub-hosted preparation job and self-hosted jobs.
 
 ![Run workflow for the control plane](RunWorkflowDeployControlPlane.png)
 
@@ -59,7 +86,26 @@ After deployment, review the workflow summary and confirm that the environment c
 
 ## Validate the runner
 
-Open **Settings** > **Actions** > **Runners** and confirm the runner is **Online** and idle. Also confirm the deployer VM is running, the `configure_deployer` extension succeeded, outbound connectivity works, and state and library storage exist.
+1. Open **Settings** > **Actions** > **Runners** and confirm the runner is **Online** and
+   idle.
+2. Confirm that the deployer VM is running and the `configure_deployer` extension
+   succeeded.
+3. Confirm outbound connectivity from the deployer to GitHub, Azure, package sources, and
+   required SAP endpoints.
+4. Confirm that Terraform state and SAP library storage exist and that the workflow summary
+   contains the expected downstream values.
+5. Record the workflow run, configuration commit, state key, and deployed version.
+
+## If deployment fails
+
+Review the first failed job before retrying. Preserve the generated configuration and
+Terraform state. Resolve authentication, quota, policy, networking, or runner registration
+errors, then obtain a new plan through the validated planning process.
+
+If runner installation failed, remove only the failed `configure_deployer` extension and
+stale runner registration, then rerun workflow `01` with **Force a re-install** enabled.
+Do not run concurrent retries against the same state. See
+[Troubleshoot GitHub Actions deployments](troubleshooting.md).
 
 ## Next step
 

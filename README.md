@@ -2,11 +2,24 @@
 
 This repository is a configuration and workflow template for deploying SAP on Azure with the [SAP Deployment Automation Framework (SDAF)](https://github.com/Azure/sap-automation). SDAF uses Terraform to deploy infrastructure and Ansible to configure operating systems and install SAP software.
 
-## Related repositories
+## Repository responsibilities
 
-- [`Azure/sap-automation`](https://github.com/Azure/sap-automation) contains the core SDAF Terraform, Ansible, scripts, and setup utility consumed by these workflows.
-- [`Azure/sap-automation-gh-bootstrap`](https://github.com/Azure/sap-automation-gh-bootstrap) (this repository) provides the GitHub Actions workflows and configuration templates.
-- [`Azure/sap-automation-bootstrap`](https://github.com/Azure/sap-automation-bootstrap) is the Azure DevOps configuration counterpart. Keep equivalent operator guidance aligned when behavior applies to both bootstrap experiences.
+- [`Azure/sap-automation`](https://github.com/Azure/sap-automation) is the central SDAF
+  documentation hub. It owns the core Terraform, Ansible, deployment scripts, runner
+  implementation, and the
+  [`SDAF-GitHub-Actions` setup utility](https://github.com/Azure/sap-automation/tree/main/deploy/scripts/py_scripts/SDAF-GitHub-Actions).
+- [`Azure/sap-automation-gh-bootstrap`](https://github.com/Azure/sap-automation-gh-bootstrap)
+  (this repository) is the customer configuration template. It owns the `.cfg_template`
+  files, generated `WORKSPACES` configuration, and GitHub Actions workflows.
+- [`Azure/sap-automation-bootstrap`](https://github.com/Azure/sap-automation-bootstrap)
+  owns the Azure DevOps customer configuration and wrapper pipelines.
+- [`Azure/SAP-automation-samples`](https://github.com/Azure/SAP-automation-samples)
+  owns shared Terraform samples and SAP Bill of Materials (BoM) definitions consumed by
+  the execution models.
+
+Use the [central SDAF hub](https://github.com/Azure/sap-automation) to compare GitHub
+Actions, Azure DevOps, and local or scripted execution. This repository documents only
+the GitHub Actions-specific procedure.
 
 The deployment consists of:
 
@@ -38,12 +51,18 @@ Do not start with workflow `01`. The bootstrap process and workflow `00` create 
 | 01 | Deploy Control Plane | Deployer, SAP library, and self-hosted runner |
 | 02 | Create workload environment | Workload-zone environment and configuration |
 | 03 | Deploy SAP Workload Zone | Shared workload-zone infrastructure |
-| 04 | Create SYSTEM environment | SAP system configuration |
+| 04 | Create SYSTEM environment | SAP system configuration committed to `WORKSPACES`; no GitHub environment is created |
 | 05 | SAP SID Infrastructure deployment | SAP virtual machines and infrastructure |
 | 06 or 06.5 | Download SAP software | SAP installation media |
 | 07 | Operating System Configuration and Installation | Configured and installed SAP system |
 
 Wait for each workflow to succeed and review its output before starting the next one.
+
+Workflows `00`, `02`, and `04` provide GitHub-specific configuration generation. Workflow
+`00` creates the control-plane GitHub environment, and workflow `02` creates the
+workload-zone GitHub environment. Despite its display name, workflow `04` only generates
+and commits SAP-system configuration. Workflow `05` uses the selected workload-zone
+environment for credentials and variables.
 
 ## Configuration templates and deployment inputs
 
@@ -73,13 +92,12 @@ For Public Azure, leave it commented because Terraform already supplies the Publ
 zone names by default. Do not add a redundant Public Azure assignment or enable multiple
 blocks.
 
-The current workflows call `azure/login` without its cloud-specific `environment` or
-`audience` inputs. The setup utility also does not create `AZURE_ENVIRONMENT` or
-`AZURE_AUDIENCE` GitHub variables. Therefore, the repository currently implements the
-Public Azure login defaults. Before using these workflows with Azure Government, add and
-validate cloud-specific login behavior across every Azure login step and environment-copy
-workflow. After that support is in place, uncomment the Government `dns_zone_names` block
-in each applicable generated configuration to select the Terraform Private DNS suffixes.
+Set the repository variables `ARM_ENVIRONMENT`, `AZURE_ENVIRONMENT`, and `AZURE_AUDIENCE`
+before creating environments. Workflow `00` copies them to the control-plane environment,
+and workflow `02` propagates them to workload environments. Public Azure defaults are
+`public`, `AzureCloud`, and `api://AzureADTokenExchange`. For Azure Government, use
+`usgovernment`, `AzureUSGovernment`, and `api://AzureADTokenExchangeUSGov`, then uncomment
+the Government `dns_zone_names` block in each applicable generated configuration.
 
 Deployment is intentionally staged. Later workflows consume the approved `WORKSPACES`
 configuration and Terraform state persisted by the SAP library, so complete and validate
@@ -105,6 +123,9 @@ The detailed guides identify these limitations at the affected steps.
 - `WORKSPACES`: generated and customized deployment configuration.
 - `docs`: detailed setup, deployment, and operations guides.
 
+For symptom-based diagnostics, see
+[Troubleshoot GitHub Actions deployments](docs/troubleshooting.md).
+
 ## References
 
 - [SDAF overview](https://learn.microsoft.com/azure/sap/automation/deployment-framework)
@@ -114,3 +135,4 @@ The detailed guides identify these limitations at the affected steps.
 - [Private endpoint DNS zone values](https://learn.microsoft.com/azure/private-link/private-endpoint-dns)
 - [SDAF source](https://github.com/Azure/sap-automation)
 - [SDAF samples](https://github.com/Azure/sap-automation-samples)
+- [Central SDAF documentation hub](https://github.com/Azure/sap-automation)

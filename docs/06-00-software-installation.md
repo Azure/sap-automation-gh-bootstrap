@@ -1,6 +1,27 @@
 # Download software and install SAP
 
-The final deployment stage downloads SAP installation media, configures operating systems, and installs the selected SAP components.
+[Central SDAF hub](https://github.com/Azure/sap-automation) |
+[Previous: SAP system](05-00-sap-system.md) |
+[Troubleshooting](troubleshooting.md)
+
+## Outcome
+
+You have approved SAP installation media in the SAP library and, after workflow `07` is
+corrected and validated, a configured and installed SAP system.
+
+## Before you begin
+
+Verify that SAP-system infrastructure is healthy, the self-hosted runner is online, and the
+system configuration and state are preserved. Obtain an approved BoM from
+[`Azure/SAP-automation-samples`](https://github.com/Azure/SAP-automation-samples), which
+owns the shared BoM definitions used by these workflows.
+
+## Inputs
+
+- The control-plane and workload-zone GitHub environments.
+- The SAP SID and approved BoM selection.
+- SAP S-user credentials with software download rights.
+- The installation-stage switches and any approved Ansible extra parameters.
 
 ## Prepare SAP credentials
 
@@ -15,9 +36,16 @@ Use the workflow compatible with the approved BoM model. Do not run both for the
 
 ## Download SAP software
 
-For workflow `06`, select the combined BoM and control-plane environment. Enable re-download only when existing media must be replaced.
+1. Select workflow `06` for a predefined combined BoM, or select workflow `06.5` to combine
+   separate application, database, and kernel BoMs.
+2. Select the control-plane environment and the approved BoM inputs.
+3. Enable re-download only when approved media must be replaced.
+4. Review the selected BoM names, platform, storage impact, credentials, and extra
+   parameters.
+5. Run the workflow.
 
-For workflow `06.5`, select mutually compatible application, kernel, database, and platform values and select the control-plane environment. Set either:
+For workflow `06.5`, select mutually compatible application, kernel, database, and
+platform values. Set either:
 
 - `bom_override_name` to the exact custom BoM name to use; or
 - `bom_save_name` to a non-empty suffix. The workflow constructs the name as `<application>-<database>-<kernel>-<save-name>`.
@@ -43,11 +71,25 @@ The workflow exposes switches for core and SAP-specific OS configuration, BoM pr
 
 For the first installation, keep all stages required by the approved topology enabled. On retry, disable only stages known to be complete and safe to skip.
 
+Before dispatching the corrected workflow, review the selected BoM, system configuration,
+inventory, stage switches, credentials, backups, and maintenance window. Record approval
+for any stage that changes an existing SAP system.
+
 ## Validate installation
 
 Validate OS package state, SAP processes, database connectivity, central services, load balancers, application server registration, shared mounts, DNS, time synchronization, monitoring, backup, security controls, and installation logs.
 
 Record the deployed BoM, SDAF version or container digest, Terraform version, Ansible version, and configuration commit.
+
+## If download or installation fails
+
+For a download failure, preserve existing media, correct credentials, storage, or BoM
+selection, and rerun with re-download disabled unless replacement is intentional.
+
+Do not dispatch workflow `07` while the blocking YAML and inventory defects remain. After
+the workflow is corrected, use its stage switches only when logs and system validation
+prove that earlier stages completed successfully. See
+[Troubleshoot GitHub Actions deployments](troubleshooting.md).
 
 ## Next step
 
