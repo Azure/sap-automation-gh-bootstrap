@@ -31,9 +31,10 @@ uses the existing workload-zone environment.
 3. Verify role assignments at every required Azure scope.
 4. Replace an unknown or expired secret; GitHub does not display stored secret values.
 
-The merged workflows use Public Azure defaults for `azure/login`. Do not use them with
-Azure Government until cloud-specific login inputs and environment propagation are
-implemented and validated.
+`azure/login` and Terraform authenticate independently. `azure/login` reads
+`AZURE_ENVIRONMENT`, while the `azurerm` provider reads `ARM_ENVIRONMENT`. A sovereign-cloud
+deployment must set both, otherwise `azure/login` succeeds and the failure only appears once
+Terraform initializes its providers.
 
 ### Azure login fails with AADSTS7002381
 
@@ -91,6 +92,55 @@ Government codes (`USAR`, `USTE`, `USVI`) require an image containing SDAF 3.22 
 3. Re-run workflow `00` and confirm it prints a non-empty `Region:`, then confirm both
    generated `.tfvars` files contain the expected `location`.
 
+### Terraform fails with AADSTS900382 in a sovereign cloud
+
+```text
+Error: building account: could not acquire access token to parse claims:
+AADSTS900382: Confidential Client is not supported in Cross Cloud request.
+```
+
+The error is raised once for every `azurerm` provider block in the module. It means the
+provider is authenticating against the Public Azure endpoint
+(`login.microsoftonline.com`) while the identity exists in a sovereign tenant.
+
+The `azurerm` provider selects its endpoint from `ARM_ENVIRONMENT`. Every workflow step
+that invokes Terraform must therefore export `ARM_ENVIRONMENT` alongside `ARM_CLIENT_ID`,
+`ARM_CLIENT_SECRET`, `ARM_SUBSCRIPTION_ID`, and `ARM_TENANT_ID`:
+
+```yaml
+env:
+  ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+  ARM_ENVIRONMENT: ${{ vars.ARM_ENVIRONMENT || 'public' }}
+  ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+  ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+  ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+```
+
+Confirm the fix by re-reading the failure: a correctly targeted request reports its
+`error_uri` as `https://login.microsoftonline.us/error?code=...` rather than
+`https://login.microsoftonline.com/error?code=...`.
+
+### Terraform fails with AADSTS7000215 or AADSTS700016
+
+```text
+Error: building account: could not acquire access token to parse claims:
+AADSTS7000215: Invalid client secret provided.
+```
+
+Terraform does not use the workflow's OIDC token. The deployment scripts sign in with
+either a service principal and client secret or a managed identity, selected by
+`USE_MSI`. When `USE_MSI` is `false`, the `ARM_CLIENT_SECRET` secret must contain a valid,
+unexpired client secret for the `ARM_CLIENT_ID` application, in the environment that runs
+the workflow.
+
+1. Create a new client secret on the application registration.
+2. Store it as the `ARM_CLIENT_SECRET` secret in the control-plane environment, and in every
+   workload-zone environment that the deployment creates.
+3. Re-run the workflow.
+
+GitHub does not display stored secret values, so an incorrect or truncated secret is only
+visible as this error.
+
 ## The self-hosted runner is unavailable
 
 1. Open **Settings** > **Actions** > **Runners** and inspect the runner status.
@@ -116,6 +166,34 @@ configuration template.
 
 Do not run concurrent workflows against the same state. Do not manually delete managed
 resources unless the approved recovery procedure requires it.
+
+### Terraform fails with SkuNotAvailable
+
+```text
+Error: creating Linux Virtual Machine ...: unexpected status 409 (409 Conflict) with
+error: SkuNotAvailable: The requested size for resource ... is currently not available
+in location '<region>' ...
+```
+
+Virtual machine size availability differs by region and by subscription, and the defaults
+in the module are not guaranteed to be offered in every region, particularly in Azure
+Government.
+
+1. List the sizes the subscription can actually use in the region:
+
+   ```powershell
+   az vm list-skus --location <region> --resource-type virtualMachines `
+     --query "[?!(restrictions[0])].name" -o tsv
+   ```
+
+2. Set the corresponding size variable in the workspace `.tfvars` file to a size returned
+   by that command. The deployer size is set with `deployer_size`.
+3. Re-run the workflow.
+
+> [!NOTE]
+> Running a workflow in test mode validates the configuration but still creates Azure
+> resources. It is not a dry run. Remove a failed deployment with the removal workflow
+> rather than assuming that nothing was provisioned.
 
 ## Software download fails
 

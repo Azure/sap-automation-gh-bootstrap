@@ -42,7 +42,13 @@ control-plane environment, and workflow `02` propagates them to workload environ
 
 For Public Azure, use `public`, `AzureCloud`, and `api://AzureADTokenExchange`. For Azure
 Government, use `usgovernment`, `AzureUSGovernment`, and
-`api://AzureADTokenExchangeUSGov`. Cloud-specific login support is separate from Terraform
+`api://AzureADTokenExchangeUSGov`.
+
+`AZURE_ENVIRONMENT` and `AZURE_AUDIENCE` configure the `azure/login` step; `ARM_ENVIRONMENT`
+configures the `azurerm` Terraform provider. Both are required, because a sovereign-cloud
+deployment that sets only the login values fails later with
+`AADSTS900382: Confidential Client is not supported in Cross Cloud request`.
+
 Private DNS suffixes: after configuring the login values,
 uncomment the Azure Government `dns_zone_names` block in each applicable generated
 `WORKSPACES` `.tfvars` file. See
@@ -196,6 +202,30 @@ Treat the PAT, GitHub App private key, client secrets, and SAP password as sensi
 
 - **Service principal** provides straightforward initial setup, with a client secret that must be protected and rotated.
 - **User-assigned managed identity** is preferred for the self-hosted runner because it avoids a long-lived deployment secret. An initial service principal is still required before the self-hosted runner exists.
+
+The workflows sign in twice, by two different mechanisms:
+
+| Layer | Mechanism | Reads |
+| --- | --- | --- |
+| `azure/login` step | GitHub OIDC federated credential | `AZURE_ENVIRONMENT`, `AZURE_AUDIENCE` |
+| Terraform and Ansible | Service principal secret, or managed identity when `USE_MSI` is `true` | `ARM_ENVIRONMENT`, `ARM_CLIENT_SECRET` |
+
+The deployment scripts do not use the workflow's OIDC token. When `USE_MSI` is `false`, the
+control-plane environment must therefore also contain an `ARM_CLIENT_SECRET` secret holding
+a valid client secret for the `ARM_CLIENT_ID` application. The setup utility does not create
+it, and the workflows fail with `AADSTS7000215: Invalid client secret provided` when it is
+missing, empty, or expired.
+
+Create the secret before running workflow `01`:
+
+```powershell
+az ad app credential reset --id <application-id> --append `
+  --display-name sdaf-gh-actions --years 1 -o json | ConvertFrom-Json | `
+  Select-Object -ExpandProperty password
+```
+
+Store the value as `ARM_CLIENT_SECRET` in the control-plane environment, and in every
+workload-zone environment that workflow `02` creates.
 
 ## Name the control plane
 
