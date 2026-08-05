@@ -162,6 +162,8 @@ jobs:
         if:                                 ${{ vars.USE_MSI == 'true' }}
         uses:                               azure/login@v3
         with:
+          environment:                      ${{ vars.AZURE_ENVIRONMENT || 'AzureCloud' }}
+          audience:                         ${{ vars.AZURE_AUDIENCE || 'api://AzureADTokenExchange' }}
           auth-type:                        IDENTITY
           client-id:                        ${{ vars.ARM_CLIENT_ID }}
           tenant-id:                        ${{ vars.ARM_TENANT_ID }}
@@ -172,6 +174,8 @@ jobs:
         if:                                 ${{ vars.USE_MSI != 'true' }}
         uses:                               azure/login@v3
         with:
+          environment:                      ${{ vars.AZURE_ENVIRONMENT || 'AzureCloud' }}
+          audience:                         ${{ vars.AZURE_AUDIENCE || 'api://AzureADTokenExchange' }}
           creds:                            |
             {
                                                   "clientId": "${{ vars.ARM_CLIENT_ID }}",
