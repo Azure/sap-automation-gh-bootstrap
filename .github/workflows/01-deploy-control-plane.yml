@@ -24,7 +24,7 @@ on:
         type:                                     boolean
         default:                                  false
       test:
-        description:                              'NOT IMPLEMENTED - this input is currently ignored and does not produce a dry run'
+        description:                              'Perform a dry-run validation - Only run Terraform plan'
         required:                                 false
         type:                                     boolean
         default:                                  false
