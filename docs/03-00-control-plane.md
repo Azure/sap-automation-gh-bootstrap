@@ -65,7 +65,7 @@ against the same state. See [SDAF control-plane configuration](https://learn.mic
 > [!CAUTION]
 > Do not rely on workflow `01`'s **Perform a dry-run validation** input. The current workflow declares the input but does not forward it to either control-plane script, so selecting it does not guarantee a plan-only run.
 
-Before using this workflow in a deployment, update and test the implementation so the input reaches the SDAF scripts and demonstrably prevents apply operations. Until then, obtain and review a control-plane Terraform plan through an independently validated SDAF process.
+Before using this workflow in a deployment, update and test the implementation so the input reaches the SDAF scripts and demonstrably prevents apply operations. Until then, obtain and review a control-plane Terraform plan outside this workflow: check out the configuration repository on the setup workstation, then run the SDAF control-plane deployment script in plan-only mode against `WORKSPACES/DEPLOYER/<control-plane>-INFRASTRUCTURE/<control-plane>-INFRASTRUCTURE.tfvars` and `WORKSPACES/LIBRARY/<control-plane>-INFRASTRUCTURE/<control-plane>-INFRASTRUCTURE.tfvars`, as described in [SDAF control-plane configuration](https://learn.microsoft.com/azure/sap/automation/configure-control-plane). There is currently no in-workflow equivalent.
 
 ## Deploy the control plane
 

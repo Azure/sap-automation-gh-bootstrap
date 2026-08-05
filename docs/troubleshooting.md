@@ -35,6 +35,29 @@ The merged workflows use Public Azure defaults for `azure/login`. Do not use the
 Azure Government until cloud-specific login inputs and environment propagation are
 implemented and validated.
 
+### Azure login fails with AADSTS7002381
+
+```text
+AADSTS7002381: Federated identity credentials issued by
+'https://token.actions.githubusercontent.com/' for applications or managed identities
+registered in this tenant must contain the enterprise claim with value 'microsoft',
+'github' or 'microsoftopensource' but actual value is ''
+```
+
+This is a tenant policy, not a misconfiguration. The issuer, audience, and subject all match
+the federated credential; comparing them does not help. GitHub issues the `enterprise` claim
+only for repositories owned by an organization that belongs to a GitHub Enterprise account,
+and the claim cannot be added through OIDC claim customization.
+
+1. Confirm the repository owner type:
+   `gh api repos/<owner>/<repository> -q .owner.type`. A `User` owner can never satisfy the
+   policy.
+2. Recreate the configuration repository under an organization in a GitHub Enterprise
+   account, then recreate the federated credential for the new subject, or
+3. Target a subscription in a tenant that does not enforce the policy.
+
+See [Repository ownership and OIDC claims](01-00-prerequisites.md#repository-ownership-and-oidc-claims).
+
 ## The self-hosted runner is unavailable
 
 1. Open **Settings** > **Actions** > **Runners** and inspect the runner status.
