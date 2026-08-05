@@ -48,12 +48,25 @@ uncomment the Azure Government `dns_zone_names` block in each applicable generat
 `WORKSPACES` `.tfvars` file. See
 [Azure Government endpoint guidance](https://learn.microsoft.com/azure/azure-government/compare-azure-government-global-azure).
 
-The setup utility creates the standard OIDC subject
-`repo:<owner>/<repository>:environment:<environment>` and the audience
-`api://AzureADTokenExchange`. It does not currently support environment-variable overrides
-for alternate subject formats. If your GitHub organization emits a different subject, update
-and validate the setup utility or edit the federated credential to match the exact subject
-reported by GitHub Actions before deploying.
+By default the setup utility does not hard-code the OIDC subject. It queries the repository's
+GitHub OIDC customization endpoint and builds the subject from the `sub_claim_prefix` GitHub
+reports, appending `:environment:<environment>`. Organizations that have enabled the immutable
+subject claim therefore get a subject of the form
+`repo:<owner>@<owner-id>/<repository>@<repository-id>:environment:<environment>`, not
+`repo:<owner>/<repository>:environment:<environment>`. Check the actual subject on the created
+`GitHubActions` federated credential before debugging OIDC failures.
+
+Two environment variables override this behaviour:
+
+| Variable | Effect |
+| --- | --- |
+| `SDAF_GITHUB_OIDC_SUBJECT_FORMAT` | `standard` forces `repo:<owner>/<repository>:environment:<environment>`; `immutable` forces the ID-based form. Any other value is rejected. |
+| `SDAF_GITHUB_OIDC_SUBJECT` | Uses the supplied string verbatim as the subject and skips both the query and the format validation. |
+
+The audience is `api://AzureADTokenExchange`. If your GitHub organization emits a subject that
+does not match the created credential, set one of the variables above and rerun, or edit the
+`GitHubActions` federated credential to match the exact subject reported by GitHub Actions
+before deploying.
 
 ## Review before execution
 
@@ -61,7 +74,10 @@ reported by GitHub Actions before deploying.
 2. Review the GitHub App permissions, PAT scopes, Azure role assignments, identity type,
    federated credential subject, and target repository.
 3. Confirm that the repository default branch is `main` and that workflow permissions
-   allow the utility and creation workflows to commit configuration.
+   allow the utility and creation workflows to commit configuration. Under
+   **Settings > Actions > General > Workflow permissions**, select
+   **Read and write permissions**. Workflow `00` commits the generated `WORKSPACES`
+   configuration back to the repository and fails without it.
 4. Confirm that no credentials will be written to tracked files or shell history.
 
 ## Download and run the setup utility
@@ -163,7 +179,9 @@ Both scripts use the `main` branch. For a reproducible production setup, replace
 
 The utility guides you through these steps:
 
-1. Create and install a GitHub App with access to repository contents, workflows, Actions variables, environments, secrets, and Issues.
+1. Create and install a GitHub App. The utility's generated link requests Actions (read),
+   Administration (write), Contents (write), Environments (write), Issues (write), Secrets
+   (write), Variables (write), and Workflows (write). Metadata (read) is granted implicitly.
 2. Provide a classic GitHub PAT with the `repo`, `workflow`, and `admin:repo_hook` scopes. Organization policy can require approval or additional scopes.
 3. Select the configuration repository and GitHub server URL.
 4. Define the control-plane name.
