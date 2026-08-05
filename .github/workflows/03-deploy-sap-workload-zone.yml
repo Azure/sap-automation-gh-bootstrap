@@ -91,6 +91,7 @@ jobs:
           APPLICATION_CONFIGURATION_NAME:         ${{ vars.APPLICATION_CONFIGURATION_NAME }}
           APP_TOKEN:                              ${{ steps.get_workflow_token.outputs.token }}
           ARM_CLIENT_ID:                          ${{ vars.ARM_CLIENT_ID }}
+          ARM_ENVIRONMENT:                        ${{ vars.ARM_ENVIRONMENT || 'public' }}
           ARM_CLIENT_SECRET:                      ${{ secrets.ARM_CLIENT_SECRET }}
           ARM_OBJECT_ID:                          ${{ vars.ARM_OBJECT_ID }}
           ARM_SUBSCRIPTION_ID:                    ${{ vars.ARM_SUBSCRIPTION_ID }}
@@ -164,6 +165,7 @@ jobs:
           APP_REGISTRATION_APP_ID:                ${{ vars.APP_REGISTRATION_APP_ID }}
           APP_TOKEN:                              ${{ steps.get_workflow_token.outputs.token }}
           ARM_CLIENT_ID:                          ${{ vars.ARM_CLIENT_ID }}
+          ARM_ENVIRONMENT:                        ${{ vars.ARM_ENVIRONMENT || 'public' }}
           ARM_CLIENT_SECRET:                      ${{ secrets.ARM_CLIENT_SECRET }}
           ARM_OBJECT_ID:                          ${{ vars.ARM_OBJECT_ID }}
           ARM_SUBSCRIPTION_ID:                    ${{ vars.ARM_SUBSCRIPTION_ID }}
