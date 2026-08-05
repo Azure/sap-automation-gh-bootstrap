@@ -120,6 +120,34 @@ Confirm the fix by re-reading the failure: a correctly targeted request reports 
 `error_uri` as `https://login.microsoftonline.us/error?code=...` rather than
 `https://login.microsoftonline.com/error?code=...`.
 
+### azure/login succeeds against the wrong cloud
+
+`ARM_ENVIRONMENT` steers Terraform and Ansible. It does **not** steer the `azure/login`
+action, which authenticates the Azure CLI. That action reads two separate inputs:
+
+| Input | Variable | Sovereign value |
+| --- | --- | --- |
+| `environment` | `AZURE_ENVIRONMENT` | `AzureUSGovernment` |
+| `audience` | `AZURE_AUDIENCE` | `api://AzureADTokenExchange` |
+
+An `azure/login` step that omits `environment` defaults to `AzureCloud`, so it either
+fails to exchange the OIDC token or signs in to Public Azure while the rest of the
+workflow targets a sovereign cloud. Every `azure/login` step must carry both inputs:
+
+```yaml
+- uses: azure/login@v3
+  with:
+    environment:    ${{ vars.AZURE_ENVIRONMENT || 'AzureCloud' }}
+    audience:       ${{ vars.AZURE_AUDIENCE || 'api://AzureADTokenExchange' }}
+    client-id:      ${{ vars.ARM_CLIENT_ID }}
+    tenant-id:      ${{ vars.ARM_TENANT_ID }}
+    subscription-id: ${{ vars.ARM_SUBSCRIPTION_ID }}
+```
+
+Set `AZURE_ENVIRONMENT`, `AZURE_AUDIENCE`, and `ARM_ENVIRONMENT` together as repository or
+environment variables. Setting only `ARM_ENVIRONMENT` leaves the CLI on Public Azure, and
+the resulting failure appears at the first `az` command rather than at the login step.
+
 ### Terraform fails with AADSTS7000215 or AADSTS700016
 
 ```text
@@ -194,6 +222,56 @@ Government.
 > Running a workflow in test mode validates the configuration but still creates Azure
 > resources. It is not a dry run. Remove a failed deployment with the removal workflow
 > rather than assuming that nothing was provisioned.
+
+### Private endpoint creation fails with PrivateEndpointCannotBeCreatedInSubnetThatHasNetworkPoliciesEnabled
+
+```text
+creating Private Endpoint (Subscription: "..." Resource Group Name:
+"<ZONE>-INFRASTRUCTURE" Private Endpoint Name: "<ZONE>-diag-storage-private-endpoint"):
+unexpected status 400 (400 Bad Request) with error:
+PrivateEndpointCannotBeCreatedInSubnetThatHasNetworkPoliciesEnabled
+```
+
+Observed in workflow `03 - Deploy SAP Workload Zone`. Azure refuses to place a private
+endpoint in a subnet whose private endpoint network policies are enabled, so this fails
+whenever `use_private_endpoint` is `true` and `private_endpoint_network_policies` is
+`Enabled`.
+
+The apply retries the import loop up to ten times before giving up, so the run can take
+several minutes and reports `Return code from deployment: 5`.
+
+Set the following in the workload zone `.tfvars` file and re-run:
+
+```terraform
+private_endpoint_network_policies = "Disabled"
+```
+
+Core SDAF versions that default this variable to `Enabled` reproduce the failure with an
+otherwise untouched configuration. Confirm the default in the version you have pinned.
+
+## Workflow 05 fails while reporting a successful deployment
+
+Workflow `05 - SAP SID Infrastructure deployment` can end in a failed step whose own log
+reads:
+
+```text
+Return code from deployment:         0
+```
+
+The deployment succeeded. `deploy/scripts/pipeline_scripts/v2/03-sap-system-deployment.sh`
+then stages generated files for commit, and in affected core SDAF versions it overwrites
+the deployment return code with `1` when `sap-parameters.yaml` is not present. That file
+is produced by the Terraform apply, so it is legitimately absent for plan-only runs and
+for runs that create no new infrastructure.
+
+Judge the outcome from the deployment output, not from the step conclusion:
+
+- `Return code from deployment: 0` together with a `Plan:` line and no Terraform `Error:`
+  block means the deployment itself succeeded.
+- A non-zero return code, or a Terraform `Error:` block, is a genuine failure.
+
+Confirm the resources in the portal before re-running. Re-running an apply that already
+succeeded is unnecessary and can force replacements.
 
 ## Software download fails
 

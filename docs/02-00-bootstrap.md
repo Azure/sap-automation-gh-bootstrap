@@ -264,6 +264,12 @@ Control-plane names use `ENV-LOCA-VNET`, for example `MGMT-WEEU-DEP01`.
 
 The setup utility enforces an environment code of no more than five characters, an SDAF region code of exactly four characters, and a virtual network code of no more than seven characters. Confirm the region code exists in SDAF's region mapping before starting workflow `00`.
 
+The authoritative list of region codes, the naming patterns they feed, and the procedure for
+adding a new region are published in the `sap-automation` repository at
+[`docs/region-codes.md`](https://github.com/Azure/sap-automation/blob/main/docs/region-codes.md).
+Look the code up there first; the container check below only confirms that the image you are
+about to run actually carries that mapping.
+
 Workflow `00` resolves the region code against the `sap_namegenerator` module **inside the
 container image referenced by `DOCKER_IMAGE`**, not against the `sap-automation` repository.
 Verify the mapping in the image you intend to use:

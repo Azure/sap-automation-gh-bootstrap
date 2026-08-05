@@ -91,6 +91,7 @@ jobs:
           APPLICATION_CONFIGURATION_NAME:         ${{ vars.APPLICATION_CONFIGURATION_NAME }}
           APP_REGISTRATION_APP_ID:                ${{ vars.APP_REGISTRATION_APP_ID }}
           APP_TOKEN:                              ${{ steps.get_workflow_token.outputs.token }}
+          ARM_ENVIRONMENT:                        ${{ vars.ARM_ENVIRONMENT || 'public' }}
           ARM_SUBSCRIPTION_ID:                    ${{ vars.ARM_SUBSCRIPTION_ID }}
           CONTROL_PLANE_NAME:                     ${{ inputs.control_plane_name }}
           DEPLOYER_KEYVAULT:                      ${{ vars.DEPLOYER_KEYVAULT }}
@@ -157,6 +158,7 @@ jobs:
           bash deploy/scripts/pipeline_scripts/12-remove-control-plane-finalize.sh
         env:
           APPLICATION_CONFIGURATION_NAME:         ${{ vars.APPLICATION_CONFIGURATION_NAME }}
+          ARM_ENVIRONMENT:                        ${{ vars.ARM_ENVIRONMENT || 'public' }}
           ARM_SUBSCRIPTION_ID:                    ${{ vars.ARM_SUBSCRIPTION_ID }}
           ARM_TENANT_ID:                          ${{ vars.ARM_TENANT_ID }}
           ARM_OBJECT_ID:                          ${{ vars.ARM_OBJECT_ID }}
