@@ -49,14 +49,47 @@ the federated credential; comparing them does not help. GitHub issues the `enter
 only for repositories owned by an organization that belongs to a GitHub Enterprise account,
 and the claim cannot be added through OIDC claim customization.
 
+The policy is tenant-scoped. A repository and subject that fail in an enforcing tenant succeed
+unchanged in a tenant that does not enforce the policy, so confirm which tenant you are
+targeting before recreating the repository or the credential.
+
 1. Confirm the repository owner type:
-   `gh api repos/<owner>/<repository> -q .owner.type`. A `User` owner can never satisfy the
-   policy.
+   `gh api repos/<owner>/<repository> -q .owner.type`. A `User` owner cannot satisfy an
+   enforcing tenant's policy.
 2. Recreate the configuration repository under an organization in a GitHub Enterprise
    account, then recreate the federated credential for the new subject, or
 3. Target a subscription in a tenant that does not enforce the policy.
 
-See [Repository ownership and OIDC claims](01-00-prerequisites.md#repository-ownership-and-oidc-claims).
+See [Tenant federated-credential policy and repository ownership](01-00-prerequisites.md#tenant-federated-credential-policy-and-repository-ownership).
+
+### Workflow 00 reports "Invalid index" and an empty region
+
+```text
+Error: Invalid index
+...
+Region Code: USVI
+Region:
+```
+
+Workflow `00` resolves the region code against the `sap_namegenerator` module inside the
+container image referenced by `DOCKER_IMAGE`. The error means that image's `region_mapping`
+does not contain the region code. The generated deployer and library `.tfvars` then receive
+`location = ""`, which fails later workflows.
+
+The `main` tag is not rebuilt on every merge and can lag the `sap-automation` repository, so a
+region code present in the repository is not necessarily present in the image. Azure
+Government codes (`USAR`, `USTE`, `USVI`) require an image containing SDAF 3.22 or later.
+
+1. Check the mapping in the image, using the lowercase four-character code:
+
+   ```powershell
+   docker run --rm --entrypoint sh <docker-image> -c `
+     "grep -n '\"<region-code>\"' /source/deploy/terraform/terraform-units/modules/sap_namegenerator/variables_global.tf"
+   ```
+
+2. Set `DOCKER_IMAGE` to a version-pinned tag or digest that contains the region code.
+3. Re-run workflow `00` and confirm it prints a non-empty `Region:`, then confirm both
+   generated `.tfvars` files contain the expected `location`.
 
 ## The self-hosted runner is unavailable
 

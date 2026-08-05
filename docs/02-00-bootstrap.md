@@ -203,6 +203,21 @@ Control-plane names use `ENV-LOCA-VNET`, for example `MGMT-WEEU-DEP01`.
 
 The setup utility enforces an environment code of no more than five characters, an SDAF region code of exactly four characters, and a virtual network code of no more than seven characters. Confirm the region code exists in SDAF's region mapping before starting workflow `00`.
 
+Workflow `00` resolves the region code against the `sap_namegenerator` module **inside the
+container image referenced by `DOCKER_IMAGE`**, not against the `sap-automation` repository.
+Verify the mapping in the image you intend to use:
+
+```powershell
+docker run --rm --entrypoint sh <docker-image> -c `
+  "grep -n '\"<region-code>\"' /source/deploy/terraform/terraform-units/modules/sap_namegenerator/variables_global.tf"
+```
+
+Use the lowercase four-character code; `region_mapping` is keyed by full region name with the
+lowercase code as its value, while workflow `00` prints the code in uppercase.
+
+If the code is absent, workflow `00` fails with `Error: Invalid index`, prints an empty
+`Region:`, and writes `location = ""` into the generated deployer and library `.tfvars`.
+
 ## Repository defaults
 
 | Variable | Default |
@@ -214,6 +229,19 @@ The setup utility enforces an environment code of no more than five characters, 
 | `TF_LOG` | `ERROR` |
 
 For production, pin the SDAF container to a tested release or digest. The utility also creates repository secrets for the GitHub App. GitHub supplies `GITHUB_TOKEN` automatically; do not duplicate it.
+
+> [!IMPORTANT]
+> The `main` tag is not rebuilt on every merge and can lag the `sap-automation` repository by
+> weeks. Features present in the repository are therefore not necessarily present in the
+> image. Azure Government region codes (`USAR`, `USTE`, `USVI`) in particular require an image
+> that includes SDAF 3.22 or later. Check the image before running workflow `00`:
+>
+> ```powershell
+> docker image inspect <docker-image> --format '{{.Created}}'
+> ```
+>
+> Set `DOCKER_IMAGE` to a version-pinned tag or digest that contains the SDAF release you
+> reviewed rather than relying on `main`.
 
 ## Verify bootstrap
 
