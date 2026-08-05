@@ -54,13 +54,44 @@ uncomment the Azure Government `dns_zone_names` block in each applicable generat
 `WORKSPACES` `.tfvars` file. See
 [Azure Government endpoint guidance](https://learn.microsoft.com/azure/azure-government/compare-azure-government-global-azure).
 
-By default the setup utility does not hard-code the OIDC subject. It queries the repository's
-GitHub OIDC customization endpoint and builds the subject from the `sub_claim_prefix` GitHub
-reports, appending `:environment:<environment>`. Organizations that have enabled the immutable
-subject claim therefore get a subject of the form
-`repo:<owner>@<owner-id>/<repository>@<repository-id>:environment:<environment>`, not
-`repo:<owner>/<repository>:environment:<environment>`. Check the actual subject on the created
-`GitHubActions` federated credential before debugging OIDC failures.
+By default the setup utility does not hard-code the OIDC subject. It calls
+`GET /repos/{owner}/{repo}/actions/oidc/customization/sub` and builds the subject from the
+`sub_claim_prefix` field GitHub returns, appending `:environment:<environment>`.
+
+Verify what your own repository reports before debugging an OIDC failure:
+
+```bash
+gh api repos/<owner>/<repository>/actions/oidc/customization/sub
+```
+
+A repository using GitHub's default subject returns:
+
+```json
+{
+  "use_default": false,
+  "use_immutable_subject": false,
+  "include_claim_keys": ["repository_owner_id", "repository_id", "context"],
+  "sub_claim_prefix": "repo:Azure/sap-automation-gh-bootstrap"
+}
+```
+
+A repository in an organization that enforces the immutable subject claim returns an
+identifier-based prefix instead:
+
+```json
+{
+  "use_default": true,
+  "use_immutable_subject": false,
+  "sub_claim_prefix": "repo:contoso@86314060/my-config-repo@1324289118"
+}
+```
+
+Read `sub_claim_prefix` rather than inferring the form from `use_default` or
+`use_immutable_subject`. As the second example shows, an enterprise-level policy can force the
+identifier-based prefix even when both flags are unset for the repository, so the final subject
+becomes `repo:<owner>@<owner-id>/<repository>@<repository-id>:environment:<environment>` and not
+`repo:<owner>/<repository>:environment:<environment>`. Always confirm the subject on the created
+`GitHubActions` federated credential matches the value above.
 
 Two environment variables override this behaviour:
 
