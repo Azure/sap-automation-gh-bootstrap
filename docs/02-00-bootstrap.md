@@ -126,6 +126,7 @@ The entry script imports files from the adjacent `sdaf` package, so the scripts 
 Run in PowerShell from a working directory outside the configuration repository:
 
 ```powershell
+$AZURE_SUBSCRIPTION_ID = Read-Host "Please enter the Azure Subscription ID where the Control Plane will be deployed"
 $source = "https://api.github.com/repos/Azure/sap-automation/contents/deploy/scripts/py_scripts/SDAF-GitHub-Actions?ref=main"
 $destination = Join-Path $PWD "SDAF-GitHub-Actions"
 
@@ -157,7 +158,7 @@ python -m venv .venv
 python -m pip install -r requirements.txt
 
 az login
-az account set --subscription <subscription-id>
+az account set --subscription $AZURE_SUBSCRIPTION_ID
 az account show --output table
 
 python ./New-SDAFGitHubActions.py
@@ -168,6 +169,7 @@ python ./New-SDAFGitHubActions.py
 Run in Bash from a working directory outside the configuration repository:
 
 ```bash
+read -p "Please enter the Azure Subscription ID where the Control Plane will be deployed: " AZURE_SUBSCRIPTION_ID
 source_url="https://api.github.com/repos/Azure/sap-automation/contents/deploy/scripts/py_scripts/SDAF-GitHub-Actions?ref=main"
 destination="$PWD/SDAF-GitHub-Actions"
 
@@ -206,7 +208,7 @@ source .venv/bin/activate
 python3 -m pip install -r requirements.txt
 
 az login
-az account set --subscription <subscription-id>
+az account set --subscription "$AZURE_SUBSCRIPTION_ID"
 az account show --output table
 
 python3 ./New-SDAFGitHubActions.py
