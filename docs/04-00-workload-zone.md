@@ -61,11 +61,18 @@ first implement and validate cloud-specific `azure/login` behavior as described 
 bootstrap guide, then uncomment the Government block in the generated workload-zone file.
 
 The SDAF `private_endpoint_network_policies` input controls network security group and
-route-table policy support for private endpoints on workload-zone subnets. It defaults to
-`Enabled` and supports `Disabled`, `Enabled`, `NetworkSecurityGroupEnabled`, and
-`RouteTableEnabled`. Select the value required by the network design; Azure Government
-environments may require `Disabled`. See
-[Manage network policies for private endpoints](https://learn.microsoft.com/azure/private-link/disable-private-endpoint-network-policy).
+route-table policy support for private endpoints on workload-zone subnets. It supports
+`Disabled`, `Enabled`, `NetworkSecurityGroupEnabled`, and `RouteTableEnabled`.
+
+> [!IMPORTANT]
+> When `use_private_endpoint` is `true`, this value must be `Disabled`. Azure rejects
+> private endpoint creation in a subnet whose policies are enabled, and workflow `03`
+> fails with `PrivateEndpointCannotBeCreatedInSubnetThatHasNetworkPoliciesEnabled`.
+> Core SDAF versions that default this to `Enabled` reproduce the failure with an
+> otherwise untouched configuration; set it explicitly in the workload-zone `.tfvars`
+> file. See [Troubleshoot GitHub Actions deployments](troubleshooting.md).
+
+See [Manage network policies for private endpoints](https://learn.microsoft.com/azure/private-link/disable-private-endpoint-network-policy).
 
 Confirm the deployment identity has approved Azure RBAC assignments at the target subscription
 or resource scopes, including any separate DNS subscription or resource group.

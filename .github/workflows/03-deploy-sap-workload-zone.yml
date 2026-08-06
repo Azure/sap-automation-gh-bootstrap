@@ -64,6 +64,8 @@ jobs:
         if:                                       ${{ vars.USE_MSI == 'true' }}
         uses:                                     azure/login@v3
         with:
+          environment:                            ${{ vars.AZURE_ENVIRONMENT || 'AzureCloud' }}
+          audience:                               ${{ vars.AZURE_AUDIENCE || 'api://AzureADTokenExchange' }}
           auth-type:                              IDENTITY
           client-id:                              ${{ vars.ARM_CLIENT_ID }}
           tenant-id:                              ${{ vars.ARM_TENANT_ID }}
@@ -74,6 +76,8 @@ jobs:
         if:                                       ${{ vars.USE_MSI != 'true' }}
         uses:                                     azure/login@v3
         with:
+          environment:                            ${{ vars.AZURE_ENVIRONMENT || 'AzureCloud' }}
+          audience:                               ${{ vars.AZURE_AUDIENCE || 'api://AzureADTokenExchange' }}
           creds:                                  |
            {
                                                   "clientId": "${{ vars.ARM_CLIENT_ID }}",
@@ -91,6 +95,7 @@ jobs:
           APPLICATION_CONFIGURATION_NAME:         ${{ vars.APPLICATION_CONFIGURATION_NAME }}
           APP_TOKEN:                              ${{ steps.get_workflow_token.outputs.token }}
           ARM_CLIENT_ID:                          ${{ vars.ARM_CLIENT_ID }}
+          ARM_ENVIRONMENT:                        ${{ vars.ARM_ENVIRONMENT || 'public' }}
           ARM_CLIENT_SECRET:                      ${{ secrets.ARM_CLIENT_SECRET }}
           ARM_OBJECT_ID:                          ${{ vars.ARM_OBJECT_ID }}
           ARM_SUBSCRIPTION_ID:                    ${{ vars.ARM_SUBSCRIPTION_ID }}
@@ -136,6 +141,8 @@ jobs:
         if:                                       ${{ vars.USE_MSI == 'true' }}
         uses:                                     azure/login@v3
         with:
+          environment:                            ${{ vars.AZURE_ENVIRONMENT || 'AzureCloud' }}
+          audience:                               ${{ vars.AZURE_AUDIENCE || 'api://AzureADTokenExchange' }}
           auth-type:                              IDENTITY
           client-id:                              ${{ vars.ARM_CLIENT_ID }}
           tenant-id:                              ${{ vars.ARM_TENANT_ID }}
@@ -146,6 +153,8 @@ jobs:
         if:                                       ${{ vars.USE_MSI != 'true' }}
         uses:                                     azure/login@v3
         with:
+          environment:                            ${{ vars.AZURE_ENVIRONMENT || 'AzureCloud' }}
+          audience:                               ${{ vars.AZURE_AUDIENCE || 'api://AzureADTokenExchange' }}
           creds:                                  |
            {
                                                   "clientId": "${{ vars.ARM_CLIENT_ID }}",
@@ -164,6 +173,7 @@ jobs:
           APP_REGISTRATION_APP_ID:                ${{ vars.APP_REGISTRATION_APP_ID }}
           APP_TOKEN:                              ${{ steps.get_workflow_token.outputs.token }}
           ARM_CLIENT_ID:                          ${{ vars.ARM_CLIENT_ID }}
+          ARM_ENVIRONMENT:                        ${{ vars.ARM_ENVIRONMENT || 'public' }}
           ARM_CLIENT_SECRET:                      ${{ secrets.ARM_CLIENT_SECRET }}
           ARM_OBJECT_ID:                          ${{ vars.ARM_OBJECT_ID }}
           ARM_SUBSCRIPTION_ID:                    ${{ vars.ARM_SUBSCRIPTION_ID }}

@@ -69,6 +69,14 @@ system file.
 
 Confirm expected VMs, disks, NICs, load balancers, and storage; validate deployer connectivity, DNS, Key Vault credentials, and Terraform state. Do not begin installation until infrastructure validation succeeds.
 
+> [!IMPORTANT]
+> Judge the outcome from the deployment output, not from the step conclusion. Affected
+> core SDAF versions overwrite a successful return code while staging generated files,
+> so the step can fail while its own log reads `Return code from deployment: 0`. That
+> value together with a `Plan:` line and no Terraform `Error:` block means the
+> deployment succeeded. See
+> [Troubleshoot GitHub Actions deployments](troubleshooting.md).
+
 Keep the generated system configuration in version control and preserve its associated
 Terraform state for later configuration, installation, and removal stages.
 

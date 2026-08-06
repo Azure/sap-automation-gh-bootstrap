@@ -42,18 +42,68 @@ control-plane environment, and workflow `02` propagates them to workload environ
 
 For Public Azure, use `public`, `AzureCloud`, and `api://AzureADTokenExchange`. For Azure
 Government, use `usgovernment`, `AzureUSGovernment`, and
-`api://AzureADTokenExchangeUSGov`. Cloud-specific login support is separate from Terraform
+`api://AzureADTokenExchangeUSGov`.
+
+`AZURE_ENVIRONMENT` and `AZURE_AUDIENCE` configure the `azure/login` step; `ARM_ENVIRONMENT`
+configures the `azurerm` Terraform provider. Both are required, because a sovereign-cloud
+deployment that sets only the login values fails later with
+`AADSTS900382: Confidential Client is not supported in Cross Cloud request`.
+
 Private DNS suffixes: after configuring the login values,
 uncomment the Azure Government `dns_zone_names` block in each applicable generated
 `WORKSPACES` `.tfvars` file. See
 [Azure Government endpoint guidance](https://learn.microsoft.com/azure/azure-government/compare-azure-government-global-azure).
 
-The setup utility creates the standard OIDC subject
-`repo:<owner>/<repository>:environment:<environment>` and the audience
-`api://AzureADTokenExchange`. It does not currently support environment-variable overrides
-for alternate subject formats. If your GitHub organization emits a different subject, update
-and validate the setup utility or edit the federated credential to match the exact subject
-reported by GitHub Actions before deploying.
+By default the setup utility does not hard-code the OIDC subject. It calls
+`GET /repos/{owner}/{repo}/actions/oidc/customization/sub` and builds the subject from the
+`sub_claim_prefix` field GitHub returns, appending `:environment:<environment>`.
+
+Verify what your own repository reports before debugging an OIDC failure:
+
+```bash
+gh api repos/<owner>/<repository>/actions/oidc/customization/sub
+```
+
+A repository using GitHub's default subject returns:
+
+```json
+{
+  "use_default": false,
+  "use_immutable_subject": false,
+  "include_claim_keys": ["repository_owner_id", "repository_id", "context"],
+  "sub_claim_prefix": "repo:Azure/sap-automation-gh-bootstrap"
+}
+```
+
+A repository in an organization that enforces the immutable subject claim returns an
+identifier-based prefix instead:
+
+```json
+{
+  "use_default": true,
+  "use_immutable_subject": false,
+  "sub_claim_prefix": "repo:contoso@86314060/my-config-repo@1324289118"
+}
+```
+
+Read `sub_claim_prefix` rather than inferring the form from `use_default` or
+`use_immutable_subject`. As the second example shows, an enterprise-level policy can force the
+identifier-based prefix even when both flags are unset for the repository, so the final subject
+becomes `repo:<owner>@<owner-id>/<repository>@<repository-id>:environment:<environment>` and not
+`repo:<owner>/<repository>:environment:<environment>`. Always confirm the subject on the created
+`GitHubActions` federated credential matches the value above.
+
+Two environment variables override this behaviour:
+
+| Variable | Effect |
+| --- | --- |
+| `SDAF_GITHUB_OIDC_SUBJECT_FORMAT` | `standard` forces `repo:<owner>/<repository>:environment:<environment>`; `immutable` forces the ID-based form. Any other value is rejected. |
+| `SDAF_GITHUB_OIDC_SUBJECT` | Uses the supplied string verbatim as the subject and skips both the query and the format validation. |
+
+The audience is `api://AzureADTokenExchange`. If your GitHub organization emits a subject that
+does not match the created credential, set one of the variables above and rerun, or edit the
+`GitHubActions` federated credential to match the exact subject reported by GitHub Actions
+before deploying.
 
 ## Review before execution
 
@@ -61,7 +111,10 @@ reported by GitHub Actions before deploying.
 2. Review the GitHub App permissions, PAT scopes, Azure role assignments, identity type,
    federated credential subject, and target repository.
 3. Confirm that the repository default branch is `main` and that workflow permissions
-   allow the utility and creation workflows to commit configuration.
+   allow the utility and creation workflows to commit configuration. Under
+   **Settings > Actions > General > Workflow permissions**, select
+   **Read and write permissions**. Workflow `00` commits the generated `WORKSPACES`
+   configuration back to the repository and fails without it.
 4. Confirm that no credentials will be written to tracked files or shell history.
 
 ## Download and run the setup utility
@@ -73,6 +126,7 @@ The entry script imports files from the adjacent `sdaf` package, so the scripts 
 Run in PowerShell from a working directory outside the configuration repository:
 
 ```powershell
+$AZURE_SUBSCRIPTION_ID = Read-Host "Please enter the Azure Subscription ID where the Control Plane will be deployed"
 $source = "https://api.github.com/repos/Azure/sap-automation/contents/deploy/scripts/py_scripts/SDAF-GitHub-Actions?ref=main"
 $destination = Join-Path $PWD "SDAF-GitHub-Actions"
 
@@ -103,8 +157,8 @@ python -m venv .venv
 ./.venv/Scripts/Activate.ps1
 python -m pip install -r requirements.txt
 
-az login
-az account set --subscription <subscription-id>
+az login --use-device-code
+az account set --subscription $AZURE_SUBSCRIPTION_ID
 az account show --output table
 
 python ./New-SDAFGitHubActions.py
@@ -115,6 +169,7 @@ python ./New-SDAFGitHubActions.py
 Run in Bash from a working directory outside the configuration repository:
 
 ```bash
+read -p "Please enter the Azure Subscription ID where the Control Plane will be deployed: " AZURE_SUBSCRIPTION_ID
 source_url="https://api.github.com/repos/Azure/sap-automation/contents/deploy/scripts/py_scripts/SDAF-GitHub-Actions?ref=main"
 destination="$PWD/SDAF-GitHub-Actions"
 
@@ -152,8 +207,8 @@ python3 -m venv .venv
 source .venv/bin/activate
 python3 -m pip install -r requirements.txt
 
-az login
-az account set --subscription <subscription-id>
+az login --use-device-code
+az account set --subscription "$AZURE_SUBSCRIPTION_ID"
 az account show --output table
 
 python3 ./New-SDAFGitHubActions.py
@@ -163,7 +218,9 @@ Both scripts use the `main` branch. For a reproducible production setup, replace
 
 The utility guides you through these steps:
 
-1. Create and install a GitHub App with access to repository contents, workflows, Actions variables, environments, secrets, and Issues.
+1. Create and install a GitHub App. The utility's generated link requests Actions (read),
+   Administration (write), Contents (write), Environments (write), Issues (write), Secrets
+   (write), Variables (write), and Workflows (write). Metadata (read) is granted implicitly.
 2. Provide a classic GitHub PAT with the `repo`, `workflow`, and `admin:repo_hook` scopes. Organization policy can require approval or additional scopes.
 3. Select the configuration repository and GitHub server URL.
 4. Define the control-plane name.
@@ -179,11 +236,56 @@ Treat the PAT, GitHub App private key, client secrets, and SAP password as sensi
 - **Service principal** provides straightforward initial setup, with a client secret that must be protected and rotated.
 - **User-assigned managed identity** is preferred for the self-hosted runner because it avoids a long-lived deployment secret. An initial service principal is still required before the self-hosted runner exists.
 
+The workflows sign in twice, by two different mechanisms:
+
+| Layer | Mechanism | Reads |
+| --- | --- | --- |
+| `azure/login` step | GitHub OIDC federated credential | `AZURE_ENVIRONMENT`, `AZURE_AUDIENCE` |
+| Terraform and Ansible | Service principal secret, or managed identity when `USE_MSI` is `true` | `ARM_ENVIRONMENT`, `ARM_CLIENT_SECRET` |
+
+The deployment scripts do not use the workflow's OIDC token. When `USE_MSI` is `false`, the
+control-plane environment must therefore also contain an `ARM_CLIENT_SECRET` secret holding
+a valid client secret for the `ARM_CLIENT_ID` application. The setup utility does not create
+it, and the workflows fail with `AADSTS7000215: Invalid client secret provided` when it is
+missing, empty, or expired.
+
+Create the secret before running workflow `01`:
+
+```powershell
+az ad app credential reset --id <application-id> --append `
+  --display-name sdaf-gh-actions --years 1 -o json | ConvertFrom-Json | `
+  Select-Object -ExpandProperty password
+```
+
+Store the value as `ARM_CLIENT_SECRET` in the control-plane environment, and in every
+workload-zone environment that workflow `02` creates.
+
 ## Name the control plane
 
 Control-plane names use `ENV-LOCA-VNET`, for example `MGMT-WEEU-DEP01`.
 
 The setup utility enforces an environment code of no more than five characters, an SDAF region code of exactly four characters, and a virtual network code of no more than seven characters. Confirm the region code exists in SDAF's region mapping before starting workflow `00`.
+
+The authoritative list of region codes, the naming patterns they feed, and the procedure for
+adding a new region are published in the `sap-automation` repository at
+[`docs/region-codes.md`](https://github.com/Azure/sap-automation/blob/main/docs/region-codes.md).
+Look the code up there first; the container check below only confirms that the image you are
+about to run actually carries that mapping.
+
+Workflow `00` resolves the region code against the `sap_namegenerator` module **inside the
+container image referenced by `DOCKER_IMAGE`**, not against the `sap-automation` repository.
+Verify the mapping in the image you intend to use:
+
+```powershell
+docker run --rm --entrypoint sh <docker-image> -c `
+  "grep -n '\"<region-code>\"' /source/deploy/terraform/terraform-units/modules/sap_namegenerator/variables_global.tf"
+```
+
+Use the lowercase four-character code; `region_mapping` is keyed by full region name with the
+lowercase code as its value, while workflow `00` prints the code in uppercase.
+
+If the code is absent, workflow `00` fails with `Error: Invalid index`, prints an empty
+`Region:`, and writes `location = ""` into the generated deployer and library `.tfvars`.
 
 ## Repository defaults
 
@@ -196,6 +298,19 @@ The setup utility enforces an environment code of no more than five characters, 
 | `TF_LOG` | `ERROR` |
 
 For production, pin the SDAF container to a tested release or digest. The utility also creates repository secrets for the GitHub App. GitHub supplies `GITHUB_TOKEN` automatically; do not duplicate it.
+
+> [!IMPORTANT]
+> The `main` tag is not rebuilt on every merge and can lag the `sap-automation` repository by
+> weeks. Features present in the repository are therefore not necessarily present in the
+> image. Azure Government region codes (`USAR`, `USTE`, `USVI`) in particular require an image
+> that includes SDAF 3.22 or later. Check the image before running workflow `00`:
+>
+> ```powershell
+> docker image inspect <docker-image> --format '{{.Created}}'
+> ```
+>
+> Set `DOCKER_IMAGE` to a version-pinned tag or digest that contains the SDAF release you
+> reviewed rather than relying on `main`.
 
 ## Verify bootstrap
 

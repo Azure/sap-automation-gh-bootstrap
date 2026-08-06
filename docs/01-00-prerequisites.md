@@ -33,6 +33,35 @@ Ensure that GitHub Issues are enabled, the repository plan supports environments
 > [!IMPORTANT]
 > The configuration repository's default branch must currently be named `main`. The setup utility and workflows `02` and `04` hard-code that branch when dispatching, pulling, or pushing changes.
 
+### Tenant federated-credential policy and repository ownership
+
+Determine whether the target Microsoft Entra tenant enforces a federated identity credential
+policy before you create the configuration repository or any Azure resources.
+
+Some tenants require the GitHub OIDC token to carry an `enterprise` claim. GitHub issues that
+claim only for repositories owned by an **organization that belongs to a GitHub Enterprise
+account**. A repository owned by a personal user account never carries the claim, and the
+claim cannot be added through OIDC claim customization.
+
+The policy is tenant-scoped, so repository ownership only matters where the policy is
+enforced:
+
+- **Tenant does not enforce the policy.** A repository owned by a personal user account works.
+  The subject derived by the setup utility is accepted, including the immutable
+  `repo:<owner>@<owner-id>/<repository>@<repository-id>:environment:<environment>` form.
+- **Tenant enforces the policy.** Every workflow that signs in to Azure fails at the first
+  `azure/login` step with `AADSTS7002381`, even when the issuer, audience, and subject all
+  match the federated credential exactly. Create the configuration repository under an
+  organization in a GitHub Enterprise account, or target a subscription in a tenant that does
+  not enforce the policy.
+
+Confirm the intended owner when the policy applies:
+
+```powershell
+gh api repos/<owner>/<repository> -q .owner.type   # Organization, where the policy is enforced
+gh api orgs/<owner> -q .plan.name                  # enterprise, where the policy is enforced
+```
+
 ## Local tools
 
 Install Python 3.10 or later, Git, and Azure CLI. Run these commands in PowerShell on the

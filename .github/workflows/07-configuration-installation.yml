@@ -5,25 +5,25 @@
   # |																			|
   # +------------------------------------4--------------------------------------*/
 
-name:											 07 - Operating System Configuration and Installation
-run-name:										 Operating System Configuration and Installation by @${{ github.actor }}
+name:                                       07 - Operating System Configuration and Installation
+run-name:                                   Operating System Configuration and Installation by @${{ github.actor }}
 
 on:
   workflow_dispatch:
     inputs:
       sap_system_identifier:
-        description:							  "SAP System Identifier (SID)"
-        default:								  "X00"
-        required:								 true
-        type:									 string
+        description:                        "SAP System Identifier (SID)"
+        default:                            "X00"
+        required:                           true
+        type:                               string
       workload_zone_name:
-        description:							  "Workload Environment name (e.g. DEV-WEEU-SAP01)"
-        type:									 environment
-        required:								 true
+        description:                        "Workload Environment name (e.g. DEV-WEEU-SAP01)"
+        type:                               environment
+        required:                           true
       bom_name:
-        description:							  "Bill of Materials name (BoM)"
-        required:								 false
-        type:									 choice
+        description:                        "Bill of Materials name (BoM)"
+        required:                           false
+        type:                               choice
         options:
           - S4_2025_v0001ms
           - S4_2025_SPS08ms
@@ -73,106 +73,110 @@ on:
           - MSSQLSRV_2019_v0001ms
           - SYBASE_1603SP15_v0003ms
       bom_override_name:
-        description:							  "Custom Name of Bill of Materials (BoM)"
-        default:								  ""
-        required:								 true
-        type:									 string
+        description:                        "Custom Name of Bill of Materials (BoM)"
+        default:                            ""
+        required:                           true
+        type:                               string
       extra_params:
-        description:							  "Extra Parameters"
-        type:									 string
-        default:								  " "
+        description:                        "Extra Parameters"
+        type:                               string
+        default:                            " "
       base_os_configuration:
-        description:							  "Core Operating System Configuration"
-        type:									 boolean
-        default:								  true
+        description:                        "Core Operating System Configuration"
+        type:                               boolean
+        default:                            true
       sap_os_configuration:
-        description:							  "SAP Operating System Configuration"
-        type:									 boolean
-        default:								  true
+        description:                        "SAP Operating System Configuration"
+        type:                               boolean
+        default:                            true
       bom_processing:
-        description:							  "Local Software Download"
-        type:									 boolean
-        default:								  true
+        description:                        "Local Software Download"
+        type:                               boolean
+        default:                            true
       scs_installation:
-        description:							  "SCS Installation"
-        type:									 boolean
-        default:								  true
+        description:                        "SCS Installation"
+        type:                               boolean
+        default:                            true
       database_install:
-        description:							  "Database Installation"
-        type:									 boolean
-        default:								  true
+        description:                        "Database Installation"
+        type:                               boolean
+        default:                            true
       db_load:
-        description:							  "Database Load"
-        type:									 boolean
-        default:								  true
+        description:                        "Database Load"
+        type:                               boolean
+        default:                            true
       high_availability_configuration:
-        description:							  "High Availability Configuration"
-        type:									 boolean
-        default:								  true
+        description:                        "High Availability Configuration"
+        type:                               boolean
+        default:                            true
       pas_installation:
-        description:							  "Primary Application Server Installation"
-        type:									 boolean
-        default:								  true
+        description:                        "Primary Application Server Installation"
+        type:                               boolean
+        default:                            true
       application_server_installation:
-        description:							  "Additional Application Server Installation"
-        type:									 boolean
-        default:								  true
+        description:                        "Additional Application Server Installation"
+        type:                               boolean
+        default:                            true
       webdispatcher_installation:
-        description:							  "Web Dispatcher Installation"
-        type:									 boolean
-        default:								  false
+        description:                        "Web Dispatcher Installation"
+        type:                               boolean
+        default:                            false
 
 permissions:
-  contents:									   write
-  id-token:									   write
-  issues:										 write
+  contents:                                 write
+  id-token:                                 write
+  issues:                                   write
 
 env:
-  TF_IN_AUTOMATION:							   ${{ vars.TF_IN_AUTOMATION }}
-  TF_LOG:										 ${{ vars.TF_LOG }}
-  ANSIBLE_CORE_VERSION:						   ${{ vars.ANSIBLE_CORE_VERSION }}
-  TF_VERSION:									 ${{ vars.TF_VERSION }}
+  TF_IN_AUTOMATION:                         ${{ vars.TF_IN_AUTOMATION }}
+  TF_LOG:                                   ${{ vars.TF_LOG }}
+  ANSIBLE_CORE_VERSION:                     ${{ vars.ANSIBLE_CORE_VERSION }}
+  TF_VERSION:                               ${{ vars.TF_VERSION }}
 
 jobs:
   configuration_and_installation:
-    name:										 Operating System Preparation
-    environment:								  ${{ inputs.workload_zone_name }}
-    runs-on:									  self-hosted
+    name:                                   Operating System Preparation
+    environment:                            ${{ inputs.workload_zone_name }}
+    runs-on:                                self-hosted
     container:
-      image:									  ${{ vars.DOCKER_IMAGE }}
+      image:                                ${{ vars.DOCKER_IMAGE }}
     steps:
-      - name:									 Get app token
-        id:									   get_workflow_token
-        uses:									 actions/create-github-app-token@v3
+      - name:                               Get app token
+        id:                                 get_workflow_token
+        uses:                               actions/create-github-app-token@v3
         with:
-          client-id:							  ${{ secrets.APPLICATION_ID }}
-          private-key:							${{ secrets.APPLICATION_PRIVATE_KEY }}
+          client-id:                        ${{ secrets.APPLICATION_ID }}
+          private-key:                      ${{ secrets.APPLICATION_PRIVATE_KEY }}
 
-      - name:									 Configure Git Safe Directory
-        run:									  |
+      - name:                               Configure Git Safe Directory
+        run:                                |
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
           git config --global --add safe.directory "/__w/${{ github.event.repository.name }}/${{ github.event.repository.name }}"
 
-      - name:									 Checkout repository
-        uses:									 actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name:                               Checkout repository
+        uses:                               actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
-          fetch-depth:							0
+          fetch-depth:                      0
 
-      - name:									 Azure Login with User Managed Identity
-        if:									   ${{ vars.USE_MSI == 'true' }}
-        uses:									 azure/login@v3
+      - name:                               Azure Login with User Managed Identity
+        if:                                 ${{ vars.USE_MSI == 'true' }}
+        uses:                               azure/login@v3
         with:
-          auth-type:							  IDENTITY
-          client-id:							  ${{ vars.ARM_CLIENT_ID }}
-          tenant-id:							  ${{ vars.ARM_TENANT_ID }}
-          subscription-id:						${{ vars.ARM_SUBSCRIPTION_ID }}
-          enable-AzPSSession:					 false
+          environment:                      ${{ vars.AZURE_ENVIRONMENT || 'AzureCloud' }}
+          audience:                         ${{ vars.AZURE_AUDIENCE || 'api://AzureADTokenExchange' }}
+          auth-type:                        IDENTITY
+          client-id:                        ${{ vars.ARM_CLIENT_ID }}
+          tenant-id:                        ${{ vars.ARM_TENANT_ID }}
+          subscription-id:                  ${{ vars.ARM_SUBSCRIPTION_ID }}
+          enable-AzPSSession:               false
 
-      - name:									 Azure Login with Service Principal
-        if:									   ${{ vars.USE_MSI != 'true' }}
-        uses:									 azure/login@v3
+      - name:                               Azure Login with Service Principal
+        if:                                 ${{ vars.USE_MSI != 'true' }}
+        uses:                               azure/login@v3
         with:
-          creds:								  |
+          environment:                      ${{ vars.AZURE_ENVIRONMENT || 'AzureCloud' }}
+          audience:                         ${{ vars.AZURE_AUDIENCE || 'api://AzureADTokenExchange' }}
+          creds:                            |
             {
                                                   "clientId": "${{ vars.ARM_CLIENT_ID }}",
                                                   "clientSecret": "${{ secrets.ARM_CLIENT_SECRET }}",
@@ -180,41 +184,42 @@ jobs:
                                                   "tenantId": "${{ vars.ARM_TENANT_ID }}"
             }
 
-      - name:									 BOM Name
-        if:									   ${{ github.event.inputs.bom_name != '' }}
-        id:									   bom
-        run:									  |
+      - name:                               BOM Name
+        if:                                 ${{ github.event.inputs.bom_name != '' }}
+        id:                                 bom
+        run:                                |
             input="${{ case(github.event.inputs.bom_override_name != '', github.event.inputs.bom_override_name, github.event.inputs.bom_name) }}"
             bom_base_name=$(echo "$input" | cut -d' ' -f1)
             echo "bom_base_name=$bom_base_name" >> "$GITHUB_OUTPUT"
 
-      - name:									 Preparation for Ansible
-        id:									   preparation
-        run:									  |
+      - name:                               Preparation for Ansible
+        id:                                 preparation
+        run:                                |
           cd ${SAP_AUTOMATION_REPO_PATH}
           chmod +x deploy/scripts/pipeline_scripts/05-DB-and-SAP-installation-prepare.sh
           deploy/scripts/pipeline_scripts/05-DB-and-SAP-installation-prepare.sh
           echo "SAP_AUTOMATION_REPO_PATH=${SAP_AUTOMATION_REPO_PATH}" >> $GITHUB_ENV
           echo "GITHUB_WORKSPACE=$GITHUB_WORKSPACE" >> $GITHUB_ENV
         env:
-          APPLICATION_CONFIGURATION_NAME:		 ${{ vars.APPLICATION_CONFIGURATION_NAME }}
-          APP_TOKEN:							  ${{ steps.get_workflow_token.outputs.token }}
-          ARM_CLIENT_ID:						  ${{ vars.ARM_CLIENT_ID }}
-          ARM_CLIENT_SECRET:					  ${{ secrets.ARM_CLIENT_SECRET }}
-          ARM_OBJECT_ID:						  ${{ vars.ARM_OBJECT_ID }}
-          ARM_SUBSCRIPTION_ID:					${{ vars.ARM_SUBSCRIPTION_ID }}
-          ARM_TENANT_ID:						  ${{ vars.ARM_TENANT_ID }}
-          BOM_BASE_NAME:						  ${{ steps.bom.outputs.bom_base_name }}
-          CONTROL_PLANE_NAME:					 ${{ vars.CONTROL_PLANE_NAME }}
-          TERRAFORM_STATE_STORAGE_ACCOUNT:		${{ vars.TERRAFORM_REMOTE_STORAGE_ACCOUNT_NAME }}
-          PIPELINE_EXTRA_PARAMETERS:			  ${{ inputs.EXTRA_PARAMS }}
-          SAP_SYSTEM_CONFIGURATION_NAME:		  "${{ inputs.workload_zone_name }}-${{ inputs.sap_system_identifier }}"
-          SCRIPT_PATH:							./sap-automation/deploy/pipelines/templates/*.sh
-          USE_MSI:								${{ vars.USE_MSI }}
-          WORKLOAD_ZONE_NAME:					 ${{ inputs.workload_zone_name }}
+          APPLICATION_CONFIGURATION_NAME:   ${{ vars.APPLICATION_CONFIGURATION_NAME }}
+          APP_TOKEN:                        ${{ steps.get_workflow_token.outputs.token }}
+          ARM_CLIENT_ID:                    ${{ vars.ARM_CLIENT_ID }}
+          ARM_ENVIRONMENT:                  ${{ vars.ARM_ENVIRONMENT || 'public' }}
+          ARM_CLIENT_SECRET:                ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_OBJECT_ID:                    ${{ vars.ARM_OBJECT_ID }}
+          ARM_SUBSCRIPTION_ID:              ${{ vars.ARM_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID:                    ${{ vars.ARM_TENANT_ID }}
+          BOM_BASE_NAME:                    ${{ steps.bom.outputs.bom_base_name }}
+          CONTROL_PLANE_NAME:               ${{ vars.CONTROL_PLANE_NAME }}
+          TERRAFORM_STATE_STORAGE_ACCOUNT:  ${{ vars.TERRAFORM_REMOTE_STORAGE_ACCOUNT_NAME }}
+          PIPELINE_EXTRA_PARAMETERS:        ${{ inputs.EXTRA_PARAMS }}
+          SAP_SYSTEM_CONFIGURATION_NAME:    "${{ inputs.workload_zone_name }}-${{ inputs.sap_system_identifier }}"
+          SCRIPT_PATH:                      ./sap-automation/deploy/pipelines/templates/*.sh
+          USE_MSI:                          ${{ vars.USE_MSI }}
+          WORKLOAD_ZONE_NAME:               ${{ inputs.workload_zone_name }}
 
-      - name:									 Install Ansible Collections
-        run:									  |
+      - name:                               Install Ansible Collections
+        run:                                |
           ansible-galaxy collection install ansible.windows --force
           ansible-galaxy collection install ansible.posix --force
           ansible-galaxy collection install ansible.utils --force
@@ -223,281 +228,293 @@ jobs:
           ansible-galaxy collection install community.general:11.4.1 --force
           ansible-galaxy collection install microsoft.ad --force
 
-      - name:									 Parameter Validation
-        uses:									 ./.github/actions/run-ansible
+      - name:                               Parameter Validation
+        uses:                               ./.github/actions/run-ansible
         with:
-          displayName:							"Parameter validation"
-          ansibleFilePath:						"${{ env.SAP_AUTOMATION_REPO_PATH }}/deploy/ansible/playbook_00_validate_parameters.yaml"
-          APPLICATION_CONFIGURATION_NAME:		 ${{ vars.APPLICATION_CONFIGURATION_NAME }}
-          ARM_CLIENT_ID:						  ${{ vars.ARM_CLIENT_ID }}
-          ARM_CLIENT_SECRET:					  ${{ secrets.ARM_CLIENT_SECRET }}
-          ARM_SUBSCRIPTION_ID:					${{ vars.ARM_SUBSCRIPTION_ID }}
-          ARM_TENANT_ID:						  ${{ vars.ARM_TENANT_ID }}
-          CONTROL_PLANE_NAME:					 ${{ vars.CONTROL_PLANE_NAME }}
-          CONTROL_PLANE_SUBSCRIPTION_ID:		  ${{ steps.preparation.outputs.CP_SUBSCRIPTION }}
-          SAP_AUTOMATION_REPO_PATH:			   ${{ env.SAP_AUTOMATION_REPO_PATH }}
-          TERRAFORM_STATE_STORAGE_ACCOUNT:		${{ vars.TERRAFORM_REMOTE_STORAGE_ACCOUNT_NAME }}
-          USE_MSI:								${{ vars.USE_MSI }}
-          WORKLOAD_ZONE_NAME:					 ${{ inputs.workload_zone_name }}
-          ansibleConfigPath:					  ${{ env.SAP_AUTOMATION_REPO_PATH }}/deploy/ansible/ansible.cfg
-          extraParams:							${{ steps.preparation.outputs.NEW_PARAMETERS }}
-          parametersFolder:					   ${{ steps.preparation.outputs.FOLDER }}
-          sapParams:							  ${{ env.GITHUB_WORKSPACE }}/WORKSPACES/SYSTEM/${{ inputs.workload_zone_name }}-${{ inputs.sap_system_identifier }}/sap-parameters.yaml
-          sidHosts:							   ${{ env.GITHUB_WORKSPACE }}/WORKSPACES/SYSTEM/${{ inputs.workload_zone_name }}-${{ inputs.sap_system_identifier }}/${{ inputs.sap_system_identifier }}_hosts.yaml
-          vaultName:							  ${{ steps.preparation.outputs.VAULT_NAME }}
+          displayName:                      "Parameter validation"
+          ansibleFilePath:                  "${{ env.SAP_AUTOMATION_REPO_PATH }}/deploy/ansible/playbook_00_validate_parameters.yaml"
+          APPLICATION_CONFIGURATION_NAME:   ${{ vars.APPLICATION_CONFIGURATION_NAME }}
+          ARM_CLIENT_ID:                    ${{ vars.ARM_CLIENT_ID }}
+          ARM_ENVIRONMENT:                  ${{ vars.ARM_ENVIRONMENT || 'public' }}
+          ARM_CLIENT_SECRET:                ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID:              ${{ vars.ARM_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID:                    ${{ vars.ARM_TENANT_ID }}
+          CONTROL_PLANE_NAME:               ${{ vars.CONTROL_PLANE_NAME }}
+          CONTROL_PLANE_SUBSCRIPTION_ID:    ${{ steps.preparation.outputs.CP_SUBSCRIPTION }}
+          SAP_AUTOMATION_REPO_PATH:         ${{ env.SAP_AUTOMATION_REPO_PATH }}
+          TERRAFORM_STATE_STORAGE_ACCOUNT:  ${{ vars.TERRAFORM_REMOTE_STORAGE_ACCOUNT_NAME }}
+          USE_MSI:                          ${{ vars.USE_MSI }}
+          WORKLOAD_ZONE_NAME:               ${{ inputs.workload_zone_name }}
+          ansibleConfigPath:                ${{ env.SAP_AUTOMATION_REPO_PATH }}/deploy/ansible/ansible.cfg
+          extraParams:                      ${{ steps.preparation.outputs.NEW_PARAMETERS }}
+          parametersFolder:                 ${{ steps.preparation.outputs.FOLDER }}
+          sapParams:                        ${{ env.GITHUB_WORKSPACE }}/WORKSPACES/SYSTEM/${{ inputs.workload_zone_name }}-${{ inputs.sap_system_identifier }}/sap-parameters.yaml
+          sidHosts:                         ${{ env.GITHUB_WORKSPACE }}/WORKSPACES/SYSTEM/${{ inputs.workload_zone_name }}-${{ inputs.sap_system_identifier }}/${{ inputs.sap_system_identifier }}_hosts.yaml
+          vaultName:                        ${{ steps.preparation.outputs.VAULT_NAME }}
 
-      - name:									 Operating System Configuration
-        if:									   ${{ github.event.inputs.base_os_configuration == 'true' }}
-        uses:									 ./.github/actions/run-ansible
+      - name:                               Operating System Configuration
+        if:                                 ${{ github.event.inputs.base_os_configuration == 'true' }}
+        uses:                               ./.github/actions/run-ansible
         with:
-          displayName:							"Operating System Configuration"
-          ansibleFilePath:						${{ env.SAP_AUTOMATION_REPO_PATH }}/deploy/ansible/playbook_01_os_base_config.yaml
-          APPLICATION_CONFIGURATION_NAME:		 ${{ vars.APPLICATION_CONFIGURATION_NAME }}
-          ARM_CLIENT_ID:						  ${{ vars.ARM_CLIENT_ID }}
-          ARM_CLIENT_SECRET:					  ${{ secrets.ARM_CLIENT_SECRET }}
-          ARM_SUBSCRIPTION_ID:					${{ vars.ARM_SUBSCRIPTION_ID }}
-          ARM_TENANT_ID:						  ${{ vars.ARM_TENANT_ID }}
-          CONTROL_PLANE_NAME:					 ${{ vars.CONTROL_PLANE_NAME }}
-          CONTROL_PLANE_SUBSCRIPTION_ID:		  ${{ steps.preparation.outputs.CP_SUBSCRIPTION }}
-          SAP_AUTOMATION_REPO_PATH:			   ${{ env.SAP_AUTOMATION_REPO_PATH }}
-          TERRAFORM_STATE_STORAGE_ACCOUNT:		${{ vars.TERRAFORM_REMOTE_STORAGE_ACCOUNT_NAME }}
-          USE_MSI:								${{ vars.USE_MSI }}
-          WORKLOAD_ZONE_NAME:					 ${{ inputs.workload_zone_name }}
-          ansibleConfigPath:					  ${{ env.SAP_AUTOMATION_REPO_PATH }}/deploy/ansible/ansible.cfg
-          extraParams:							${{ steps.preparation.outputs.NEW_PARAMETERS }}
-          sapParams:							  ${{ env.GITHUB_WORKSPACE }}/WORKSPACES/SYSTEM/${{ inputs.workload_zone_name }}-${{ inputs.sap_system_identifier }}/sap-parameters.yaml
-          sidHosts:							   ${{ env.GITHUB_WORKSPACE }}/WORKSPACES/SYSTEM/${{ inputs.workload_zone_name }}-${{ inputs.sap_system_identifier }}/${{ inputs.sap_system_identifier }}_hosts.yaml
-          vaultName:							  ${{ steps.preparation.outputs.VAULT_NAME }}
+          displayName:                      "Operating System Configuration"
+          ansibleFilePath:                  ${{ env.SAP_AUTOMATION_REPO_PATH }}/deploy/ansible/playbook_01_os_base_config.yaml
+          APPLICATION_CONFIGURATION_NAME:   ${{ vars.APPLICATION_CONFIGURATION_NAME }}
+          ARM_CLIENT_ID:                    ${{ vars.ARM_CLIENT_ID }}
+          ARM_ENVIRONMENT:                  ${{ vars.ARM_ENVIRONMENT || 'public' }}
+          ARM_CLIENT_SECRET:                ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID:              ${{ vars.ARM_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID:                    ${{ vars.ARM_TENANT_ID }}
+          CONTROL_PLANE_NAME:               ${{ vars.CONTROL_PLANE_NAME }}
+          CONTROL_PLANE_SUBSCRIPTION_ID:    ${{ steps.preparation.outputs.CP_SUBSCRIPTION }}
+          SAP_AUTOMATION_REPO_PATH:         ${{ env.SAP_AUTOMATION_REPO_PATH }}
+          TERRAFORM_STATE_STORAGE_ACCOUNT:  ${{ vars.TERRAFORM_REMOTE_STORAGE_ACCOUNT_NAME }}
+          USE_MSI:                          ${{ vars.USE_MSI }}
+          WORKLOAD_ZONE_NAME:               ${{ inputs.workload_zone_name }}
+          ansibleConfigPath:                ${{ env.SAP_AUTOMATION_REPO_PATH }}/deploy/ansible/ansible.cfg
+          extraParams:                      ${{ steps.preparation.outputs.NEW_PARAMETERS }}
+          sapParams:                        ${{ env.GITHUB_WORKSPACE }}/WORKSPACES/SYSTEM/${{ inputs.workload_zone_name }}-${{ inputs.sap_system_identifier }}/sap-parameters.yaml
+          sidHosts:                         ${{ env.GITHUB_WORKSPACE }}/WORKSPACES/SYSTEM/${{ inputs.workload_zone_name }}-${{ inputs.sap_system_identifier }}/${{ inputs.sap_system_identifier }}_hosts.yaml
+          vaultName:                        ${{ steps.preparation.outputs.VAULT_NAME }}
 
-      - name:									 SAP Specific Operating System Configuration
-        if:									   ${{ github.event.inputs.sap_os_configuration == 'true' }}
-        uses:									 ./.github/actions/run-ansible
+      - name:                               SAP Specific Operating System Configuration
+        if:                                 ${{ github.event.inputs.sap_os_configuration == 'true' }}
+        uses:                               ./.github/actions/run-ansible
         with:
-          displayName:							"SAP Specific Operating System Configuration"
-          ansibleFilePath:						${{ env.SAP_AUTOMATION_REPO_PATH }}/deploy/ansible/playbook_02_os_sap_specific_config.yaml
-          APPLICATION_CONFIGURATION_NAME:		 ${{ vars.APPLICATION_CONFIGURATION_NAME }}
-          ARM_CLIENT_ID:						  ${{ vars.ARM_CLIENT_ID }}
-          ARM_CLIENT_SECRET:					  ${{ secrets.ARM_CLIENT_SECRET }}
-          ARM_SUBSCRIPTION_ID:					${{ vars.ARM_SUBSCRIPTION_ID }}
-          ARM_TENANT_ID:						  ${{ vars.ARM_TENANT_ID }}
-          CONTROL_PLANE_NAME:					 ${{ vars.CONTROL_PLANE_NAME }}
-          CONTROL_PLANE_SUBSCRIPTION_ID:		  ${{ steps.preparation.outputs.CP_SUBSCRIPTION }}
-          SAP_AUTOMATION_REPO_PATH:			   ${{ env.SAP_AUTOMATION_REPO_PATH }}
-          TERRAFORM_STATE_STORAGE_ACCOUNT:		${{ vars.TERRAFORM_REMOTE_STORAGE_ACCOUNT_NAME }}
-          USE_MSI:								${{ vars.USE_MSI }}
-          WORKLOAD_ZONE_NAME:					 ${{ inputs.workload_zone_name }}
-          ansibleConfigPath:					  ${{ env.SAP_AUTOMATION_REPO_PATH }}/deploy/ansible/ansible.cfg
-          extraParams:							${{ steps.preparation.outputs.NEW_PARAMETERS }}
-          sapParams:							  ${{ env.GITHUB_WORKSPACE }}/WORKSPACES/SYSTEM/${{ inputs.workload_zone_name }}-${{ inputs.sap_system_identifier }}/sap-parameters.yaml
-          sidHosts:							   ${{ env.GITHUB_WORKSPACE }}/WORKSPACES/SYSTEM/${{ inputs.workload_zone_name }}-${{ inputs.sap_system_identifier }}/${{ inputs.sap_system_identifier }}_hosts.yaml
-          vaultName:							  ${{ steps.preparation.outputs.VAULT_NAME }}
+          displayName:                      "SAP Specific Operating System Configuration"
+          ansibleFilePath:                  ${{ env.SAP_AUTOMATION_REPO_PATH }}/deploy/ansible/playbook_02_os_sap_specific_config.yaml
+          APPLICATION_CONFIGURATION_NAME:   ${{ vars.APPLICATION_CONFIGURATION_NAME }}
+          ARM_CLIENT_ID:                    ${{ vars.ARM_CLIENT_ID }}
+          ARM_ENVIRONMENT:                  ${{ vars.ARM_ENVIRONMENT || 'public' }}
+          ARM_CLIENT_SECRET:                ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID:              ${{ vars.ARM_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID:                    ${{ vars.ARM_TENANT_ID }}
+          CONTROL_PLANE_NAME:               ${{ vars.CONTROL_PLANE_NAME }}
+          CONTROL_PLANE_SUBSCRIPTION_ID:    ${{ steps.preparation.outputs.CP_SUBSCRIPTION }}
+          SAP_AUTOMATION_REPO_PATH:         ${{ env.SAP_AUTOMATION_REPO_PATH }}
+          TERRAFORM_STATE_STORAGE_ACCOUNT:  ${{ vars.TERRAFORM_REMOTE_STORAGE_ACCOUNT_NAME }}
+          USE_MSI:                          ${{ vars.USE_MSI }}
+          WORKLOAD_ZONE_NAME:               ${{ inputs.workload_zone_name }}
+          ansibleConfigPath:                ${{ env.SAP_AUTOMATION_REPO_PATH }}/deploy/ansible/ansible.cfg
+          extraParams:                      ${{ steps.preparation.outputs.NEW_PARAMETERS }}
+          sapParams:                        ${{ env.GITHUB_WORKSPACE }}/WORKSPACES/SYSTEM/${{ inputs.workload_zone_name }}-${{ inputs.sap_system_identifier }}/sap-parameters.yaml
+          sidHosts:                         ${{ env.GITHUB_WORKSPACE }}/WORKSPACES/SYSTEM/${{ inputs.workload_zone_name }}-${{ inputs.sap_system_identifier }}/${{ inputs.sap_system_identifier }}_hosts.yaml
+          vaultName:                        ${{ steps.preparation.outputs.VAULT_NAME }}
 
-      - name:									 SAP Software download
-        if:									   ${{ github.event.inputs.bom_processing == 'true' }}
-        uses:									 ./.github/actions/run-ansible
+      - name:                               SAP Software download
+        if:                                 ${{ github.event.inputs.bom_processing == 'true' }}
+        uses:                               ./.github/actions/run-ansible
         with:
-          displayName:							"Software download"
-          ansibleFilePath:						${{ env.SAP_AUTOMATION_REPO_PATH }}/deploy/ansible/playbook_03_bom_processing.yaml
-          APPLICATION_CONFIGURATION_NAME:		 ${{ vars.APPLICATION_CONFIGURATION_NAME }}
-          ARM_CLIENT_ID:						  ${{ vars.ARM_CLIENT_ID }}
-          ARM_CLIENT_SECRET:					  ${{ secrets.ARM_CLIENT_SECRET }}
-          ARM_SUBSCRIPTION_ID:					${{ vars.ARM_SUBSCRIPTION_ID }}
-          ARM_TENANT_ID:						  ${{ vars.ARM_TENANT_ID }}
-          CONTROL_PLANE_NAME:					 ${{ vars.CONTROL_PLANE_NAME }}
-          CONTROL_PLANE_SUBSCRIPTION_ID:		  ${{ steps.preparation.outputs.CP_SUBSCRIPTION }}
-          TERRAFORM_STATE_STORAGE_ACCOUNT:		${{ vars.TERRAFORM_REMOTE_STORAGE_ACCOUNT_NAME }}
-          SAP_AUTOMATION_REPO_PATH:			   ${{ env.SAP_AUTOMATION_REPO_PATH }}
-          USE_MSI:								${{ vars.USE_MSI }}
-          WORKLOAD_ZONE_NAME:					 ${{ inputs.workload_zone_name }}
-          ansibleConfigPath:					  ${{ env.SAP_AUTOMATION_REPO_PATH }}/deploy/ansible/ansible.cfg
-          extraParams:							${{ steps.preparation.outputs.NEW_PARAMETERS }}
-          parametersFolder:					   ${{ steps.preparation.outputs.FOLDER }}
-          sapParams:							  ${{ env.GITHUB_WORKSPACE }}/WORKSPACES/SYSTEM/${{ inputs.workload_zone_name }}-${{ inputs.sap_system_identifier }}/sap-parameters.yaml
-          sidHosts:							   ${{ env.GITHUB_WORKSPACE }}/WORKSPACES/SYSTEM/${{ inputs.workload_zone_name }}-${{ inputs.sap_system_identifier }}/${{ inputs.sap_system_identifier }}_hosts.yaml
-          vaultName:							  ${{ steps.preparation.outputs.VAULT_NAME }}
+          displayName:                      "Software download"
+          ansibleFilePath:                  ${{ env.SAP_AUTOMATION_REPO_PATH }}/deploy/ansible/playbook_03_bom_processing.yaml
+          APPLICATION_CONFIGURATION_NAME:   ${{ vars.APPLICATION_CONFIGURATION_NAME }}
+          ARM_CLIENT_ID:                    ${{ vars.ARM_CLIENT_ID }}
+          ARM_ENVIRONMENT:                  ${{ vars.ARM_ENVIRONMENT || 'public' }}
+          ARM_CLIENT_SECRET:                ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID:              ${{ vars.ARM_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID:                    ${{ vars.ARM_TENANT_ID }}
+          CONTROL_PLANE_NAME:               ${{ vars.CONTROL_PLANE_NAME }}
+          CONTROL_PLANE_SUBSCRIPTION_ID:    ${{ steps.preparation.outputs.CP_SUBSCRIPTION }}
+          TERRAFORM_STATE_STORAGE_ACCOUNT:  ${{ vars.TERRAFORM_REMOTE_STORAGE_ACCOUNT_NAME }}
+          SAP_AUTOMATION_REPO_PATH:         ${{ env.SAP_AUTOMATION_REPO_PATH }}
+          USE_MSI:                          ${{ vars.USE_MSI }}
+          WORKLOAD_ZONE_NAME:               ${{ inputs.workload_zone_name }}
+          ansibleConfigPath:                ${{ env.SAP_AUTOMATION_REPO_PATH }}/deploy/ansible/ansible.cfg
+          extraParams:                      ${{ steps.preparation.outputs.NEW_PARAMETERS }}
+          parametersFolder:                 ${{ steps.preparation.outputs.FOLDER }}
+          sapParams:                        ${{ env.GITHUB_WORKSPACE }}/WORKSPACES/SYSTEM/${{ inputs.workload_zone_name }}-${{ inputs.sap_system_identifier }}/sap-parameters.yaml
+          sidHosts:                         ${{ env.GITHUB_WORKSPACE }}/WORKSPACES/SYSTEM/${{ inputs.workload_zone_name }}-${{ inputs.sap_system_identifier }}/${{ inputs.sap_system_identifier }}_hosts.yaml
+          vaultName:                        ${{ steps.preparation.outputs.VAULT_NAME }}
 
-      - name:									 Central Services Installation
-        if:									   ${{ github.event.inputs.scs_installation == 'true' }}
-        uses:									 ./.github/actions/run-ansible
+      - name:                               Central Services Installation
+        if:                                 ${{ github.event.inputs.scs_installation == 'true' }}
+        uses:                               ./.github/actions/run-ansible
         with:
-          displayName:							"Central Services Installation"
-          ansibleFilePath:						${{ env.SAP_AUTOMATION_REPO_PATH }}/deploy/ansible/playbook_05_00_00_sap_scs_install.yaml
-          APPLICATION_CONFIGURATION_NAME:		 ${{ vars.APPLICATION_CONFIGURATION_NAME }}
-          ARM_CLIENT_ID:						  ${{ vars.ARM_CLIENT_ID }}
-          ARM_CLIENT_SECRET:					  ${{ secrets.ARM_CLIENT_SECRET }}
-          ARM_SUBSCRIPTION_ID:					${{ vars.ARM_SUBSCRIPTION_ID }}
-          ARM_TENANT_ID:						  ${{ vars.ARM_TENANT_ID }}
-          CONTROL_PLANE_NAME:					 ${{ vars.CONTROL_PLANE_NAME }}
-          CONTROL_PLANE_SUBSCRIPTION_ID:		  ${{ steps.preparation.outputs.CP_SUBSCRIPTION }}
-          SAP_AUTOMATION_REPO_PATH:			   ${{ env.SAP_AUTOMATION_REPO_PATH }}
-          TERRAFORM_STATE_STORAGE_ACCOUNT:		${{ vars.TERRAFORM_REMOTE_STORAGE_ACCOUNT_NAME }}
-          USE_MSI:								${{ vars.USE_MSI }}
-          WORKLOAD_ZONE_NAME:					 ${{ inputs.workload_zone_name }}
-          ansibleConfigPath:					  ${{ env.SAP_AUTOMATION_REPO_PATH }}/deploy/ansible/ansible.cfg
-          extraParams:							${{ steps.preparation.outputs.NEW_PARAMETERS }}
-          sapParams:							  ${{ env.GITHUB_WORKSPACE }}/WORKSPACES/SYSTEM/${{ inputs.workload_zone_name }}-${{ inputs.sap_system_identifier }}/sap-parameters.yaml
-          sidHosts:							   ${{ env.GITHUB_WORKSPACE }}/WORKSPACES/SYSTEM/${{ inputs.workload_zone_name }}-${{ inputs.sap_system_identifier }}/${{ inputs.sap_system_identifier }}_hosts.yaml
-          vaultName:							  ${{ steps.preparation.outputs.VAULT_NAME }}
+          displayName:                      "Central Services Installation"
+          ansibleFilePath:                  ${{ env.SAP_AUTOMATION_REPO_PATH }}/deploy/ansible/playbook_05_00_00_sap_scs_install.yaml
+          APPLICATION_CONFIGURATION_NAME:   ${{ vars.APPLICATION_CONFIGURATION_NAME }}
+          ARM_CLIENT_ID:                    ${{ vars.ARM_CLIENT_ID }}
+          ARM_ENVIRONMENT:                  ${{ vars.ARM_ENVIRONMENT || 'public' }}
+          ARM_CLIENT_SECRET:                ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID:              ${{ vars.ARM_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID:                    ${{ vars.ARM_TENANT_ID }}
+          CONTROL_PLANE_NAME:               ${{ vars.CONTROL_PLANE_NAME }}
+          CONTROL_PLANE_SUBSCRIPTION_ID:    ${{ steps.preparation.outputs.CP_SUBSCRIPTION }}
+          SAP_AUTOMATION_REPO_PATH:         ${{ env.SAP_AUTOMATION_REPO_PATH }}
+          TERRAFORM_STATE_STORAGE_ACCOUNT:  ${{ vars.TERRAFORM_REMOTE_STORAGE_ACCOUNT_NAME }}
+          USE_MSI:                          ${{ vars.USE_MSI }}
+          WORKLOAD_ZONE_NAME:               ${{ inputs.workload_zone_name }}
+          ansibleConfigPath:                ${{ env.SAP_AUTOMATION_REPO_PATH }}/deploy/ansible/ansible.cfg
+          extraParams:                      ${{ steps.preparation.outputs.NEW_PARAMETERS }}
+          sapParams:                        ${{ env.GITHUB_WORKSPACE }}/WORKSPACES/SYSTEM/${{ inputs.workload_zone_name }}-${{ inputs.sap_system_identifier }}/sap-parameters.yaml
+          sidHosts:                         ${{ env.GITHUB_WORKSPACE }}/WORKSPACES/SYSTEM/${{ inputs.workload_zone_name }}-${{ inputs.sap_system_identifier }}/${{ inputs.sap_system_identifier }}_hosts.yaml
+          vaultName:                        ${{ steps.preparation.outputs.VAULT_NAME }}
 
-      - name:									 Database Installation
-        if:									   ${{ github.event.inputs.database_install == 'true' }}
-        uses:									 ./.github/actions/run-ansible
+      - name:                               Database Installation
+        if:                                 ${{ github.event.inputs.database_install == 'true' }}
+        uses:                               ./.github/actions/run-ansible
         with:
-          displayName:							"Database Installation"
-          ansibleFilePath:						${{ env.SAP_AUTOMATION_REPO_PATH }}/deploy/ansible/playbook_04_00_00_db_install.yaml
-          APPLICATION_CONFIGURATION_NAME:		 ${{ vars.APPLICATION_CONFIGURATION_NAME }}
-          ARM_CLIENT_ID:						  ${{ vars.ARM_CLIENT_ID }}
-          ARM_CLIENT_SECRET:					  ${{ secrets.ARM_CLIENT_SECRET }}
-          ARM_SUBSCRIPTION_ID:					${{ vars.ARM_SUBSCRIPTION_ID }}
-          ARM_TENANT_ID:						  ${{ vars.ARM_TENANT_ID }}
-          CONTROL_PLANE_NAME:					 ${{ vars.CONTROL_PLANE_NAME }}
-          CONTROL_PLANE_SUBSCRIPTION_ID:		  ${{ steps.preparation.outputs.CP_SUBSCRIPTION }}
-          SAP_AUTOMATION_REPO_PATH:			   ${{ env.SAP_AUTOMATION_REPO_PATH }}
-          TERRAFORM_STATE_STORAGE_ACCOUNT:		${{ vars.TERRAFORM_REMOTE_STORAGE_ACCOUNT_NAME }}
-          USE_MSI:								${{ vars.USE_MSI }}
-          WORKLOAD_ZONE_NAME:					 ${{ inputs.workload_zone_name }}
-          ansibleConfigPath:					  ${{ env.SAP_AUTOMATION_REPO_PATH }}/deploy/ansible/ansible.cfg
-          extraParams:							${{ steps.preparation.outputs.NEW_PARAMETERS }}
-          sapParams:							  ${{ env.GITHUB_WORKSPACE }}/WORKSPACES/SYSTEM/${{ inputs.workload_zone_name }}-${{ inputs.sap_system_identifier }}/sap-parameters.yaml
-          sidHosts:							   ${{ env.GITHUB_WORKSPACE }}/WORKSPACES/SYSTEM/${{ inputs.workload_zone_name }}-${{ inputs.sap_system_identifier }}/${{ inputs.sap_system_identifier }}_hosts.yaml
-          vaultName:							  ${{ steps.preparation.outputs.VAULT_NAME }}
+          displayName:                      "Database Installation"
+          ansibleFilePath:                  ${{ env.SAP_AUTOMATION_REPO_PATH }}/deploy/ansible/playbook_04_00_00_db_install.yaml
+          APPLICATION_CONFIGURATION_NAME:   ${{ vars.APPLICATION_CONFIGURATION_NAME }}
+          ARM_CLIENT_ID:                    ${{ vars.ARM_CLIENT_ID }}
+          ARM_ENVIRONMENT:                  ${{ vars.ARM_ENVIRONMENT || 'public' }}
+          ARM_CLIENT_SECRET:                ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID:              ${{ vars.ARM_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID:                    ${{ vars.ARM_TENANT_ID }}
+          CONTROL_PLANE_NAME:               ${{ vars.CONTROL_PLANE_NAME }}
+          CONTROL_PLANE_SUBSCRIPTION_ID:    ${{ steps.preparation.outputs.CP_SUBSCRIPTION }}
+          SAP_AUTOMATION_REPO_PATH:         ${{ env.SAP_AUTOMATION_REPO_PATH }}
+          TERRAFORM_STATE_STORAGE_ACCOUNT:  ${{ vars.TERRAFORM_REMOTE_STORAGE_ACCOUNT_NAME }}
+          USE_MSI:                          ${{ vars.USE_MSI }}
+          WORKLOAD_ZONE_NAME:               ${{ inputs.workload_zone_name }}
+          ansibleConfigPath:                ${{ env.SAP_AUTOMATION_REPO_PATH }}/deploy/ansible/ansible.cfg
+          extraParams:                      ${{ steps.preparation.outputs.NEW_PARAMETERS }}
+          sapParams:                        ${{ env.GITHUB_WORKSPACE }}/WORKSPACES/SYSTEM/${{ inputs.workload_zone_name }}-${{ inputs.sap_system_identifier }}/sap-parameters.yaml
+          sidHosts:                         ${{ env.GITHUB_WORKSPACE }}/WORKSPACES/SYSTEM/${{ inputs.workload_zone_name }}-${{ inputs.sap_system_identifier }}/${{ inputs.sap_system_identifier }}_hosts.yaml
+          vaultName:                        ${{ steps.preparation.outputs.VAULT_NAME }}
 
-      - name:									 Database Load
-        if:									   ${{ github.event.inputs.db_load == 'true' }}
-        uses:									 ./.github/actions/run-ansible
+      - name:                               Database Load
+        if:                                 ${{ github.event.inputs.db_load == 'true' }}
+        uses:                               ./.github/actions/run-ansible
         with:
-          displayName:							"Database Load"
-          ansibleFilePath:						${{ env.SAP_AUTOMATION_REPO_PATH }}/deploy/ansible/playbook_05_01_sap_dbload.yaml
-          APPLICATION_CONFIGURATION_NAME:		 ${{ vars.APPLICATION_CONFIGURATION_NAME }}
-          ARM_CLIENT_ID:						  ${{ vars.ARM_CLIENT_ID }}
-          ARM_CLIENT_SECRET:					  ${{ secrets.ARM_CLIENT_SECRET }}
-          ARM_SUBSCRIPTION_ID:					${{ vars.ARM_SUBSCRIPTION_ID }}
-          ARM_TENANT_ID:						  ${{ vars.ARM_TENANT_ID }}
-          CONTROL_PLANE_NAME:					 ${{ vars.CONTROL_PLANE_NAME }}
-          CONTROL_PLANE_SUBSCRIPTION_ID:		  ${{ steps.preparation.outputs.CP_SUBSCRIPTION }}
-          TERRAFORM_STATE_STORAGE_ACCOUNT:		${{ vars.TERRAFORM_REMOTE_STORAGE_ACCOUNT_NAME }}
-          SAP_AUTOMATION_REPO_PATH:			   ${{ env.SAP_AUTOMATION_REPO_PATH }}
-          USE_MSI:								${{ vars.USE_MSI }}
-          WORKLOAD_ZONE_NAME:					 ${{ inputs.workload_zone_name }}
-          ansibleConfigPath:					  ${{ env.SAP_AUTOMATION_REPO_PATH }}/deploy/ansible/ansible.cfg
-          extraParams:							${{ steps.preparation.outputs.NEW_PARAMETERS }}
-          parametersFolder:					   ${{ steps.preparation.outputs.FOLDER }}
-          sapParams:							  ${{ env.GITHUB_WORKSPACE }}/WORKSPACES/SYSTEM/${{ inputs.workload_zone_name }}-${{ inputs.sap_system_identifier }}/sap-parameters.yaml
-          sidHosts:							   ${{ env.GITHUB_WORKSPACE }}/WORKSPACES/SYSTEM/${{ inputs.workload_zone_name }}-${{ inputs.sap_system_identifier }}/${{ inputs.sap_system_identifier }}_hosts.yaml
-          vaultName:							  ${{ steps.preparation.outputs.VAULT_NAME }}
-      - name:									 High Availability Configuration
-        if:									   ${{ github.event.inputs.high_availability_configuration == 'true' }}
-        uses:									 ./.github/actions/run-ansible
+          displayName:                      "Database Load"
+          ansibleFilePath:                  ${{ env.SAP_AUTOMATION_REPO_PATH }}/deploy/ansible/playbook_05_01_sap_dbload.yaml
+          APPLICATION_CONFIGURATION_NAME:   ${{ vars.APPLICATION_CONFIGURATION_NAME }}
+          ARM_CLIENT_ID:                    ${{ vars.ARM_CLIENT_ID }}
+          ARM_ENVIRONMENT:                  ${{ vars.ARM_ENVIRONMENT || 'public' }}
+          ARM_CLIENT_SECRET:                ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID:              ${{ vars.ARM_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID:                    ${{ vars.ARM_TENANT_ID }}
+          CONTROL_PLANE_NAME:               ${{ vars.CONTROL_PLANE_NAME }}
+          CONTROL_PLANE_SUBSCRIPTION_ID:    ${{ steps.preparation.outputs.CP_SUBSCRIPTION }}
+          TERRAFORM_STATE_STORAGE_ACCOUNT:  ${{ vars.TERRAFORM_REMOTE_STORAGE_ACCOUNT_NAME }}
+          SAP_AUTOMATION_REPO_PATH:         ${{ env.SAP_AUTOMATION_REPO_PATH }}
+          USE_MSI:                          ${{ vars.USE_MSI }}
+          WORKLOAD_ZONE_NAME:               ${{ inputs.workload_zone_name }}
+          ansibleConfigPath:                ${{ env.SAP_AUTOMATION_REPO_PATH }}/deploy/ansible/ansible.cfg
+          extraParams:                      ${{ steps.preparation.outputs.NEW_PARAMETERS }}
+          parametersFolder:                 ${{ steps.preparation.outputs.FOLDER }}
+          sapParams:                        ${{ env.GITHUB_WORKSPACE }}/WORKSPACES/SYSTEM/${{ inputs.workload_zone_name }}-${{ inputs.sap_system_identifier }}/sap-parameters.yaml
+          sidHosts:                         ${{ env.GITHUB_WORKSPACE }}/WORKSPACES/SYSTEM/${{ inputs.workload_zone_name }}-${{ inputs.sap_system_identifier }}/${{ inputs.sap_system_identifier }}_hosts.yaml
+          vaultName:                        ${{ steps.preparation.outputs.VAULT_NAME }}
+      - name:                               High Availability Configuration
+        if:                                 ${{ github.event.inputs.high_availability_configuration == 'true' }}
+        uses:                               ./.github/actions/run-ansible
         with:
-          displayName:							"High Availability Configuration"
-          ansibleFilePath:						${{ env.SAP_AUTOMATION_REPO_PATH }}/deploy/ansible/playbook_04_00_01_db_ha.yaml
-          APPLICATION_CONFIGURATION_NAME:		 ${{ vars.APPLICATION_CONFIGURATION_NAME }}
-          ARM_CLIENT_ID:						  ${{ vars.ARM_CLIENT_ID }}
-          ARM_CLIENT_SECRET:					  ${{ secrets.ARM_CLIENT_SECRET }}
-          ARM_SUBSCRIPTION_ID:					${{ vars.ARM_SUBSCRIPTION_ID }}
-          ARM_TENANT_ID:						  ${{ vars.ARM_TENANT_ID }}
-          CONTROL_PLANE_NAME:					 ${{ vars.CONTROL_PLANE_NAME }}
-          CONTROL_PLANE_SUBSCRIPTION_ID:		  ${{ steps.preparation.outputs.CP_SUBSCRIPTION }}
-          TERRAFORM_STATE_STORAGE_ACCOUNT:		${{ vars.TERRAFORM_REMOTE_STORAGE_ACCOUNT_NAME }}
-          SAP_AUTOMATION_REPO_PATH:			   ${{ env.SAP_AUTOMATION_REPO_PATH }}
-          USE_MSI:								${{ vars.USE_MSI }}
-          WORKLOAD_ZONE_NAME:					 ${{ inputs.workload_zone_name }}
-          ansibleConfigPath:					  ${{ env.SAP_AUTOMATION_REPO_PATH }}/deploy/ansible/ansible.cfg
-          extraParams:							${{ steps.preparation.outputs.NEW_PARAMETERS }}
-          parametersFolder:					   ${{ steps.preparation.outputs.FOLDER }}
-          sapParams:							  ${{ env.GITHUB_WORKSPACE }}/WORKSPACES/SYSTEM/${{ inputs.workload_zone_name }}-${{ inputs.sap_system_identifier }}/sap-parameters.yaml
-          sidHosts:							   ${{ env.GITHUB_WORKSPACE }}/WORKSPACES/SYSTEM/${{ inputs.workload_zone_name }}-${{ inputs.sap_system_identifier }}/${{ inputs.sap_system_identifier }}_hosts.yaml
-          vaultName:							  ${{ steps.preparation.outputs.VAULT_NAME }}
-
-
-      - name:									 Primary Application Server Installation
-        if:									   ${{ github.event.inputs.pas_installation == 'true' }}
-        uses:									 ./.github/actions/run-ansible
-        with:
-          displayName:							"Primary Application Server Installation"
-          ansibleFilePath:						${{ env.SAP_AUTOMATION_REPO_PATH }}/deploy/ansible/playbook_05_02_sap_pas_install.yaml
-          APPLICATION_CONFIGURATION_NAME:		 ${{ vars.APPLICATION_CONFIGURATION_NAME }}
-          ARM_CLIENT_ID:						  ${{ vars.ARM_CLIENT_ID }}
-          ARM_CLIENT_SECRET:					  ${{ secrets.ARM_CLIENT_SECRET }}
-          ARM_SUBSCRIPTION_ID:					${{ vars.ARM_SUBSCRIPTION_ID }}
-          ARM_TENANT_ID:						  ${{ vars.ARM_TENANT_ID }}
-          CONTROL_PLANE_NAME:					 ${{ vars.CONTROL_PLANE_NAME }}
-          CONTROL_PLANE_SUBSCRIPTION_ID:		  ${{ steps.preparation.outputs.CP_SUBSCRIPTION }}
-          SAP_AUTOMATION_REPO_PATH:			   ${{ env.SAP_AUTOMATION_REPO_PATH }}
-          TERRAFORM_STATE_STORAGE_ACCOUNT:		${{ vars.TERRAFORM_REMOTE_STORAGE_ACCOUNT_NAME }}
-          USE_MSI:								${{ vars.USE_MSI }}
-          WORKLOAD_ZONE_NAME:					 ${{ inputs.workload_zone_name }}
-          ansibleConfigPath:					  ${{ env.SAP_AUTOMATION_REPO_PATH }}/deploy/ansible/ansible.cfg
-          extraParams:							${{ steps.preparation.outputs.NEW_PARAMETERS }}
-          sapParams:							  ${{ env.GITHUB_WORKSPACE }}/WORKSPACES/SYSTEM/${{ inputs.workload_zone_name }}-${{ inputs.sap_system_identifier }}/sap-parameters.yaml
-          sidHosts:							   ${{ env.GITHUB_WORKSPACE }}/WORKSPACES/SYSTEM/${{ inputs.workload_zone_name }}-${{ inputs.sap_system_identifier }}/${{ inputs.sap_system_identifier }}_hosts.yaml
-          vaultName:							  ${{ steps.preparation.outputs.VAULT_NAME }}
-      - name:									 Additional Application Server Installation
-        if:									   ${{ github.event.inputs.application_server_installation == 'true' }}
-        uses:									 ./.github/actions/run-ansible
-        with:
-          displayName:							"Application Server Installation"
-          ansibleFilePath:						${{ env.SAP_AUTOMATION_REPO_PATH }}/deploy/ansible/playbook_05_03_sap_app_install.yaml
-          APPLICATION_CONFIGURATION_NAME:		 ${{ vars.APPLICATION_CONFIGURATION_NAME }}
-          ARM_CLIENT_ID:						  ${{ vars.ARM_CLIENT_ID }}
-          ARM_CLIENT_SECRET:					  ${{ secrets.ARM_CLIENT_SECRET }}
-          ARM_SUBSCRIPTION_ID:					${{ vars.ARM_SUBSCRIPTION_ID }}
-          ARM_TENANT_ID:						  ${{ vars.ARM_TENANT_ID }}
-          CONTROL_PLANE_NAME:					 ${{ vars.CONTROL_PLANE_NAME }}
-          CONTROL_PLANE_SUBSCRIPTION_ID:		  ${{ steps.preparation.outputs.CP_SUBSCRIPTION }}
-          SAP_AUTOMATION_REPO_PATH:			   ${{ env.SAP_AUTOMATION_REPO_PATH }}
-          TERRAFORM_STATE_STORAGE_ACCOUNT:		${{ vars.TERRAFORM_REMOTE_STORAGE_ACCOUNT_NAME }}
-          USE_MSI:								${{ vars.USE_MSI }}
-          WORKLOAD_ZONE_NAME:					 ${{ inputs.workload_zone_name }}
-          ansibleConfigPath:					  ${{ env.SAP_AUTOMATION_REPO_PATH }}/deploy/ansible/ansible.cfg
-          extraParams:							${{ steps.preparation.outputs.NEW_PARAMETERS }}
-          sapParams:							  ${{ env.GITHUB_WORKSPACE }}/WORKSPACES/SYSTEM/${{ inputs.workload_zone_name }}-${{ inputs.sap_system_identifier }}/sap-parameters.yaml
-          sidHosts:							   ${{ env.GITHUB_WORKSPACE }}/WORKSPACES/SYSTEM/${{ inputs.workload_zone_name }}-${{ inputs.sap_system_identifier }}/${{ inputs.sap_system_identifier }}_hosts.yaml
-          vaultName:							  ${{ steps.preparation.outputs.VAULT_NAME }}
-
-      - name:									 Web Dispatcher Installation
-        if:									   ${{ github.event.inputs.webdispatcher_installation == 'true' }}
-        uses:									 ./.github/actions/run-ansible
-        with:
-          displayName:							"Web Dispatcher Installation"
-          ansibleFilePath:						${{ env.SAP_AUTOMATION_REPO_PATH }}/deploy/ansible/playbook_05_04_sap_web_install.yaml
-          APPLICATION_CONFIGURATION_NAME:		 ${{ vars.APPLICATION_CONFIGURATION_NAME }}
-          ARM_CLIENT_ID:						  ${{ vars.ARM_CLIENT_ID }}
-          ARM_CLIENT_SECRET:					  ${{ secrets.ARM_CLIENT_SECRET }}
-          ARM_SUBSCRIPTION_ID:					${{ vars.ARM_SUBSCRIPTION_ID }}
-          ARM_TENANT_ID:						  ${{ vars.ARM_TENANT_ID }}
-          CONTROL_PLANE_NAME:					 ${{ vars.CONTROL_PLANE_NAME }}
-          CONTROL_PLANE_SUBSCRIPTION_ID:		  ${{ steps.preparation.outputs.CP_SUBSCRIPTION }}
-          SAP_AUTOMATION_REPO_PATH:			   ${{ env.SAP_AUTOMATION_REPO_PATH }}
-          TERRAFORM_STATE_STORAGE_ACCOUNT:		${{ vars.TERRAFORM_REMOTE_STORAGE_ACCOUNT_NAME }}
-          USE_MSI:								${{ vars.USE_MSI }}
-          WORKLOAD_ZONE_NAME:					 ${{ inputs.workload_zone_name }}
-          ansibleConfigPath:					  ${{ env.SAP_AUTOMATION_REPO_PATH }}/deploy/ansible/ansible.cfg
-          extraParams:							${{ steps.preparation.outputs.NEW_PARAMETERS }}
-          sapParams:							  ${{ env.GITHUB_WORKSPACE }}/WORKSPACES/SYSTEM/${{ inputs.workload_zone_name }}-${{ inputs.sap_system_identifier }}/sap-parameters.yaml
-          sidHosts:							   ${{ env.GITHUB_WORKSPACE }}/WORKSPACES/SYSTEM/${{ inputs.workload_zone_name }}-${{ inputs.sap_system_identifier }}/${{ inputs.sap_system_identifier }}_hosts.yaml
-          vaultName:							  ${{ steps.preparation.outputs.VAULT_NAME }}
+          displayName:                      "High Availability Configuration"
+          ansibleFilePath:                  ${{ env.SAP_AUTOMATION_REPO_PATH }}/deploy/ansible/playbook_04_00_01_db_ha.yaml
+          APPLICATION_CONFIGURATION_NAME:   ${{ vars.APPLICATION_CONFIGURATION_NAME }}
+          ARM_CLIENT_ID:                    ${{ vars.ARM_CLIENT_ID }}
+          ARM_ENVIRONMENT:                  ${{ vars.ARM_ENVIRONMENT || 'public' }}
+          ARM_CLIENT_SECRET:                ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID:              ${{ vars.ARM_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID:                    ${{ vars.ARM_TENANT_ID }}
+          CONTROL_PLANE_NAME:               ${{ vars.CONTROL_PLANE_NAME }}
+          CONTROL_PLANE_SUBSCRIPTION_ID:    ${{ steps.preparation.outputs.CP_SUBSCRIPTION }}
+          TERRAFORM_STATE_STORAGE_ACCOUNT:  ${{ vars.TERRAFORM_REMOTE_STORAGE_ACCOUNT_NAME }}
+          SAP_AUTOMATION_REPO_PATH:         ${{ env.SAP_AUTOMATION_REPO_PATH }}
+          USE_MSI:                          ${{ vars.USE_MSI }}
+          WORKLOAD_ZONE_NAME:               ${{ inputs.workload_zone_name }}
+          ansibleConfigPath:                ${{ env.SAP_AUTOMATION_REPO_PATH }}/deploy/ansible/ansible.cfg
+          extraParams:                      ${{ steps.preparation.outputs.NEW_PARAMETERS }}
+          parametersFolder:                 ${{ steps.preparation.outputs.FOLDER }}
+          sapParams:                        ${{ env.GITHUB_WORKSPACE }}/WORKSPACES/SYSTEM/${{ inputs.workload_zone_name }}-${{ inputs.sap_system_identifier }}/sap-parameters.yaml
+          sidHosts:                         ${{ env.GITHUB_WORKSPACE }}/WORKSPACES/SYSTEM/${{ inputs.workload_zone_name }}-${{ inputs.sap_system_identifier }}/${{ inputs.sap_system_identifier }}_hosts.yaml
+          vaultName:                        ${{ steps.preparation.outputs.VAULT_NAME }}
 
 
-      - name:									 Post Configuration Actions
-        uses:									 ./.github/actions/run-ansible
+      - name:                               Primary Application Server Installation
+        if:                                 ${{ github.event.inputs.pas_installation == 'true' }}
+        uses:                               ./.github/actions/run-ansible
         with:
-          displayName:							"Post Configuration Actions"
-          ansibleFilePath:						${{ env.SAP_AUTOMATION_REPO_PATH }}/deploy/ansible/playbook_08_00_00_post_configuration_actions.yaml
-          APPLICATION_CONFIGURATION_NAME:		 ${{ vars.APPLICATION_CONFIGURATION_NAME }}
-          ARM_CLIENT_ID:						  ${{ vars.ARM_CLIENT_ID }}
-          ARM_CLIENT_SECRET:					  ${{ secrets.ARM_CLIENT_SECRET }}
-          ARM_SUBSCRIPTION_ID:					${{ vars.ARM_SUBSCRIPTION_ID }}
-          ARM_TENANT_ID:						  ${{ vars.ARM_TENANT_ID }}
-          CONTROL_PLANE_NAME:					 ${{ vars.CONTROL_PLANE_NAME }}
-          CONTROL_PLANE_SUBSCRIPTION_ID:		  ${{ steps.preparation.outputs.CP_SUBSCRIPTION }}
-          TERRAFORM_STATE_STORAGE_ACCOUNT:		${{ vars.TERRAFORM_REMOTE_STORAGE_ACCOUNT_NAME }}
-          SAP_AUTOMATION_REPO_PATH:			   ${{ env.SAP_AUTOMATION_REPO_PATH }}
-          USE_MSI:								${{ vars.USE_MSI }}
-          WORKLOAD_ZONE_NAME:					 ${{ inputs.workload_zone_name }}
-          ansibleConfigPath:					  ${{ env.SAP_AUTOMATION_REPO_PATH }}/deploy/ansible/ansible.cfg
-          extraParams:							${{ steps.preparation.outputs.NEW_PARAMETERS }}
-          parametersFolder:					   ${{ steps.preparation.outputs.FOLDER }}
-          sapParams:							  ${{ env.GITHUB_WORKSPACE }}/WORKSPACES/SYSTEM/${{ inputs.workload_zone_name }}-${{ inputs.sap_system_identifier }}/sap-parameters.yaml
-          sidHosts:							   ${{ env.GITHUB_WORKSPACE }}/WORKSPACES/SYSTEM/${{ inputs.workload_zone_name }}-${{ inputs.sap_system_identifier }}/${{ inputs.sap_system_identifier }}_hosts.yaml
-          vaultName:							  ${{ steps.preparation.outputs.VAULT_NAME }}
+          displayName:                      "Primary Application Server Installation"
+          ansibleFilePath:                  ${{ env.SAP_AUTOMATION_REPO_PATH }}/deploy/ansible/playbook_05_02_sap_pas_install.yaml
+          APPLICATION_CONFIGURATION_NAME:   ${{ vars.APPLICATION_CONFIGURATION_NAME }}
+          ARM_CLIENT_ID:                    ${{ vars.ARM_CLIENT_ID }}
+          ARM_ENVIRONMENT:                  ${{ vars.ARM_ENVIRONMENT || 'public' }}
+          ARM_CLIENT_SECRET:                ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID:              ${{ vars.ARM_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID:                    ${{ vars.ARM_TENANT_ID }}
+          CONTROL_PLANE_NAME:               ${{ vars.CONTROL_PLANE_NAME }}
+          CONTROL_PLANE_SUBSCRIPTION_ID:    ${{ steps.preparation.outputs.CP_SUBSCRIPTION }}
+          SAP_AUTOMATION_REPO_PATH:         ${{ env.SAP_AUTOMATION_REPO_PATH }}
+          TERRAFORM_STATE_STORAGE_ACCOUNT:  ${{ vars.TERRAFORM_REMOTE_STORAGE_ACCOUNT_NAME }}
+          USE_MSI:                          ${{ vars.USE_MSI }}
+          WORKLOAD_ZONE_NAME:               ${{ inputs.workload_zone_name }}
+          ansibleConfigPath:                ${{ env.SAP_AUTOMATION_REPO_PATH }}/deploy/ansible/ansible.cfg
+          extraParams:                      ${{ steps.preparation.outputs.NEW_PARAMETERS }}
+          sapParams:                        ${{ env.GITHUB_WORKSPACE }}/WORKSPACES/SYSTEM/${{ inputs.workload_zone_name }}-${{ inputs.sap_system_identifier }}/sap-parameters.yaml
+          sidHosts:                         ${{ env.GITHUB_WORKSPACE }}/WORKSPACES/SYSTEM/${{ inputs.workload_zone_name }}-${{ inputs.sap_system_identifier }}/${{ inputs.sap_system_identifier }}_hosts.yaml
+          vaultName:                        ${{ steps.preparation.outputs.VAULT_NAME }}
+      - name:                               Additional Application Server Installation
+        if:                                 ${{ github.event.inputs.application_server_installation == 'true' }}
+        uses:                               ./.github/actions/run-ansible
+        with:
+          displayName:                      "Application Server Installation"
+          ansibleFilePath:                  ${{ env.SAP_AUTOMATION_REPO_PATH }}/deploy/ansible/playbook_05_03_sap_app_install.yaml
+          APPLICATION_CONFIGURATION_NAME:   ${{ vars.APPLICATION_CONFIGURATION_NAME }}
+          ARM_CLIENT_ID:                    ${{ vars.ARM_CLIENT_ID }}
+          ARM_ENVIRONMENT:                  ${{ vars.ARM_ENVIRONMENT || 'public' }}
+          ARM_CLIENT_SECRET:                ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID:              ${{ vars.ARM_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID:                    ${{ vars.ARM_TENANT_ID }}
+          CONTROL_PLANE_NAME:               ${{ vars.CONTROL_PLANE_NAME }}
+          CONTROL_PLANE_SUBSCRIPTION_ID:    ${{ steps.preparation.outputs.CP_SUBSCRIPTION }}
+          SAP_AUTOMATION_REPO_PATH:         ${{ env.SAP_AUTOMATION_REPO_PATH }}
+          TERRAFORM_STATE_STORAGE_ACCOUNT:  ${{ vars.TERRAFORM_REMOTE_STORAGE_ACCOUNT_NAME }}
+          USE_MSI:                          ${{ vars.USE_MSI }}
+          WORKLOAD_ZONE_NAME:               ${{ inputs.workload_zone_name }}
+          ansibleConfigPath:                ${{ env.SAP_AUTOMATION_REPO_PATH }}/deploy/ansible/ansible.cfg
+          extraParams:                      ${{ steps.preparation.outputs.NEW_PARAMETERS }}
+          sapParams:                        ${{ env.GITHUB_WORKSPACE }}/WORKSPACES/SYSTEM/${{ inputs.workload_zone_name }}-${{ inputs.sap_system_identifier }}/sap-parameters.yaml
+          sidHosts:                         ${{ env.GITHUB_WORKSPACE }}/WORKSPACES/SYSTEM/${{ inputs.workload_zone_name }}-${{ inputs.sap_system_identifier }}/${{ inputs.sap_system_identifier }}_hosts.yaml
+          vaultName:                        ${{ steps.preparation.outputs.VAULT_NAME }}
+
+      - name:                               Web Dispatcher Installation
+        if:                                 ${{ github.event.inputs.webdispatcher_installation == 'true' }}
+        uses:                               ./.github/actions/run-ansible
+        with:
+          displayName:                      "Web Dispatcher Installation"
+          ansibleFilePath:                  ${{ env.SAP_AUTOMATION_REPO_PATH }}/deploy/ansible/playbook_05_04_sap_web_install.yaml
+          APPLICATION_CONFIGURATION_NAME:   ${{ vars.APPLICATION_CONFIGURATION_NAME }}
+          ARM_CLIENT_ID:                    ${{ vars.ARM_CLIENT_ID }}
+          ARM_ENVIRONMENT:                  ${{ vars.ARM_ENVIRONMENT || 'public' }}
+          ARM_CLIENT_SECRET:                ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID:              ${{ vars.ARM_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID:                    ${{ vars.ARM_TENANT_ID }}
+          CONTROL_PLANE_NAME:               ${{ vars.CONTROL_PLANE_NAME }}
+          CONTROL_PLANE_SUBSCRIPTION_ID:    ${{ steps.preparation.outputs.CP_SUBSCRIPTION }}
+          SAP_AUTOMATION_REPO_PATH:         ${{ env.SAP_AUTOMATION_REPO_PATH }}
+          TERRAFORM_STATE_STORAGE_ACCOUNT:  ${{ vars.TERRAFORM_REMOTE_STORAGE_ACCOUNT_NAME }}
+          USE_MSI:                          ${{ vars.USE_MSI }}
+          WORKLOAD_ZONE_NAME:               ${{ inputs.workload_zone_name }}
+          ansibleConfigPath:                ${{ env.SAP_AUTOMATION_REPO_PATH }}/deploy/ansible/ansible.cfg
+          extraParams:                      ${{ steps.preparation.outputs.NEW_PARAMETERS }}
+          sapParams:                        ${{ env.GITHUB_WORKSPACE }}/WORKSPACES/SYSTEM/${{ inputs.workload_zone_name }}-${{ inputs.sap_system_identifier }}/sap-parameters.yaml
+          sidHosts:                         ${{ env.GITHUB_WORKSPACE }}/WORKSPACES/SYSTEM/${{ inputs.workload_zone_name }}-${{ inputs.sap_system_identifier }}/${{ inputs.sap_system_identifier }}_hosts.yaml
+          vaultName:                        ${{ steps.preparation.outputs.VAULT_NAME }}
+
+
+      - name:                               Post Configuration Actions
+        uses:                               ./.github/actions/run-ansible
+        with:
+          displayName:                      "Post Configuration Actions"
+          ansibleFilePath:                  ${{ env.SAP_AUTOMATION_REPO_PATH }}/deploy/ansible/playbook_08_00_00_post_configuration_actions.yaml
+          APPLICATION_CONFIGURATION_NAME:   ${{ vars.APPLICATION_CONFIGURATION_NAME }}
+          ARM_CLIENT_ID:                    ${{ vars.ARM_CLIENT_ID }}
+          ARM_ENVIRONMENT:                  ${{ vars.ARM_ENVIRONMENT || 'public' }}
+          ARM_CLIENT_SECRET:                ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID:              ${{ vars.ARM_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID:                    ${{ vars.ARM_TENANT_ID }}
+          CONTROL_PLANE_NAME:               ${{ vars.CONTROL_PLANE_NAME }}
+          CONTROL_PLANE_SUBSCRIPTION_ID:    ${{ steps.preparation.outputs.CP_SUBSCRIPTION }}
+          TERRAFORM_STATE_STORAGE_ACCOUNT:  ${{ vars.TERRAFORM_REMOTE_STORAGE_ACCOUNT_NAME }}
+          SAP_AUTOMATION_REPO_PATH:         ${{ env.SAP_AUTOMATION_REPO_PATH }}
+          USE_MSI:                          ${{ vars.USE_MSI }}
+          WORKLOAD_ZONE_NAME:               ${{ inputs.workload_zone_name }}
+          ansibleConfigPath:                ${{ env.SAP_AUTOMATION_REPO_PATH }}/deploy/ansible/ansible.cfg
+          extraParams:                      ${{ steps.preparation.outputs.NEW_PARAMETERS }}
+          parametersFolder:                 ${{ steps.preparation.outputs.FOLDER }}
+          sapParams:                        ${{ env.GITHUB_WORKSPACE }}/WORKSPACES/SYSTEM/${{ inputs.workload_zone_name }}-${{ inputs.sap_system_identifier }}/sap-parameters.yaml
+          sidHosts:                         ${{ env.GITHUB_WORKSPACE }}/WORKSPACES/SYSTEM/${{ inputs.workload_zone_name }}-${{ inputs.sap_system_identifier }}/${{ inputs.sap_system_identifier }}_hosts.yaml
+          vaultName:                        ${{ steps.preparation.outputs.VAULT_NAME }}

@@ -44,11 +44,14 @@ the Entra federated credential; all three must match exactly. Verify that `ARM_E
 the selected GitHub environment. Azure Government uses `usgovernment`,
 `AzureUSGovernment`, and `api://AzureADTokenExchangeUSGov`.
 
-The current setup utility always creates
-`repo:<owner>/<repository>:environment:<environment>`. It does not implement
-`SDAF_GITHUB_OIDC_SUBJECT_FORMAT` or `SDAF_GITHUB_OIDC_SUBJECT` overrides. If GitHub emits a
-different subject, update and validate the setup utility or edit the `GitHubActions`
-federated credential to match the exact emitted value.
+By default the setup utility derives the subject from the repository's GitHub OIDC
+customization endpoint, so on organizations that use the immutable subject claim it creates
+`repo:<owner>@<owner-id>/<repository>@<repository-id>:environment:<environment>` rather than
+`repo:<owner>/<repository>:environment:<environment>`. Read the subject from the created
+`GitHubActions` federated credential rather than assuming the standard form. To force a
+subject, set `SDAF_GITHUB_OIDC_SUBJECT_FORMAT` to `standard` or `immutable`, or set
+`SDAF_GITHUB_OIDC_SUBJECT` to an exact value, and rerun the utility. Otherwise, edit the
+`GitHubActions` federated credential to match the exact emitted value.
 
 ## Self-hosted runner is offline
 
