@@ -157,7 +157,7 @@ python -m venv .venv
 ./.venv/Scripts/Activate.ps1
 python -m pip install -r requirements.txt
 
-az login
+az login --use-device-code
 az account set --subscription $AZURE_SUBSCRIPTION_ID
 az account show --output table
 
@@ -207,7 +207,7 @@ python3 -m venv .venv
 source .venv/bin/activate
 python3 -m pip install -r requirements.txt
 
-az login
+az login --use-device-code
 az account set --subscription "$AZURE_SUBSCRIPTION_ID"
 az account show --output table
 
