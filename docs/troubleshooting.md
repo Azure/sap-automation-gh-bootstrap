@@ -128,7 +128,7 @@ action, which authenticates the Azure CLI. That action reads two separate inputs
 | Input | Variable | Sovereign value |
 | --- | --- | --- |
 | `environment` | `AZURE_ENVIRONMENT` | `AzureUSGovernment` |
-| `audience` | `AZURE_AUDIENCE` | `api://AzureADTokenExchange` |
+| `audience` | `AZURE_AUDIENCE` | `api://AzureADTokenExchangeUSGov` |
 
 An `azure/login` step that omits `environment` defaults to `AzureCloud`, so it either
 fails to exchange the OIDC token or signs in to Public Azure while the rest of the
