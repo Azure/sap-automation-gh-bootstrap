@@ -1,0 +1,240 @@
+# /*---------------------------------------------------------------------------8
+# |                                                                            |
+# |       This workflow performs the SAP quality assurance tests              |
+# |                                                                            |
+# +------------------------------------4--------------------------------------*/
+
+name:                                       13 - SAP Quality Assurance
+run-name:                                   SAP Quality Assurance by @${{ github.actor }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      sap_system_identifier:
+        description:                        "SAP System Identifier (SID)"
+        default:                            "X00"
+        required:                           true
+        type:                               string
+      workload_zone_name:
+        description:                        "Workload Environment name (e.g. DEV-WEEU-SAP01)"
+        type:                               environment
+        required:                           true
+      test_type:
+        description:                        "Test type"
+        type:                               choice
+        required:                           true
+        default:                            SAPFunctionalTests
+        options:
+          - SAPFunctionalTests
+          - ConfigurationChecks
+      sap_functional_test_type:
+        description:                        "SAP functional test type (ignored for ConfigurationChecks)"
+        type:                               choice
+        required:                           true
+        default:                            DatabaseHighAvailability
+        options:
+          - DatabaseHighAvailability
+          - CentralServicesHighAvailability
+          - AzureBackupDatabase
+      test_groups:
+        description:                        "Test groups to run, comma separated (empty runs the whole test type)"
+        type:                               string
+        required:                           false
+        default:                            ""
+      test_cases:
+        description:                        "Test cases to run, comma separated (empty runs the whole group)"
+        type:                               string
+        required:                           false
+        default:                            ""
+      offline_mode:
+        description:                        "Run the high availability tests in offline mode"
+        type:                               boolean
+        required:                           false
+        default:                            false
+      extra_params:
+        description:                        "Extra Parameters"
+        type:                               string
+        required:                           false
+        default:                            " "
+
+env:
+  ANSIBLE_CORE_VERSION:                     ${{ vars.ANSIBLE_CORE_VERSION }}
+
+jobs:
+  quality_assurance:
+    name:                                   SAP Quality Assurance
+    environment:                            ${{ inputs.workload_zone_name }}
+    runs-on:                                self-hosted
+    container:
+      image:                                ${{ vars.DOCKER_IMAGE }}
+    steps:
+      - name:                               Get app token
+        id:                                 get_workflow_token
+        uses:                               actions/create-github-app-token@v3
+        with:
+          client-id:                        ${{ secrets.APPLICATION_ID }}
+          private-key:                      ${{ secrets.APPLICATION_PRIVATE_KEY }}
+
+      - name:                               Configure Git Safe Directory
+        run:                                |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          git config --global --add safe.directory "/__w/${{ github.event.repository.name }}/${{ github.event.repository.name }}"
+
+      - name:                               Checkout repository
+        uses:                               actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth:                      0
+
+      - name:                               Azure Login with User Managed Identity
+        if:                                 ${{ vars.USE_MSI == 'true' }}
+        uses:                               azure/login@v3
+        with:
+          environment:                      ${{ vars.AZURE_ENVIRONMENT || 'AzureCloud' }}
+          audience:                         ${{ vars.AZURE_AUDIENCE || 'api://AzureADTokenExchange' }}
+          auth-type:                        IDENTITY
+          client-id:                        ${{ vars.ARM_CLIENT_ID }}
+          tenant-id:                        ${{ vars.ARM_TENANT_ID }}
+          subscription-id:                  ${{ vars.ARM_SUBSCRIPTION_ID }}
+          enable-AzPSSession:               false
+
+      - name:                               Azure Login with Service Principal
+        if:                                 ${{ vars.USE_MSI != 'true' }}
+        uses:                               azure/login@v3
+        with:
+          environment:                      ${{ vars.AZURE_ENVIRONMENT || 'AzureCloud' }}
+          audience:                         ${{ vars.AZURE_AUDIENCE || 'api://AzureADTokenExchange' }}
+          creds:                            |
+            {
+                                                  "clientId": "${{ vars.ARM_CLIENT_ID }}",
+                                                  "clientSecret": "${{ secrets.ARM_CLIENT_SECRET }}",
+                                                  "subscriptionId": "${{ vars.ARM_SUBSCRIPTION_ID }}",
+                                                  "tenantId": "${{ vars.ARM_TENANT_ID }}"
+            }
+
+      - name:                               Preparation for Ansible
+        id:                                 preparation
+        run:                                |
+          cd ${SAP_AUTOMATION_REPO_PATH}
+          chmod +x deploy/scripts/pipeline_scripts/13-sap-automation-qa.sh
+          deploy/scripts/pipeline_scripts/13-sap-automation-qa.sh
+          echo "SAP_AUTOMATION_REPO_PATH=${SAP_AUTOMATION_REPO_PATH}" >> $GITHUB_ENV
+          echo "GITHUB_WORKSPACE=$GITHUB_WORKSPACE" >> $GITHUB_ENV
+        env:
+          APPLICATION_CONFIGURATION_NAME:   ${{ vars.APPLICATION_CONFIGURATION_NAME }}
+          APP_TOKEN:                        ${{ steps.get_workflow_token.outputs.token }}
+          ARM_CLIENT_ID:                    ${{ vars.ARM_CLIENT_ID }}
+          ARM_CLIENT_SECRET:                ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_ENVIRONMENT:                  ${{ vars.ARM_ENVIRONMENT || 'public' }}
+          ARM_OBJECT_ID:                    ${{ vars.ARM_OBJECT_ID }}
+          ARM_SUBSCRIPTION_ID:              ${{ vars.ARM_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID:                    ${{ vars.ARM_TENANT_ID }}
+          CONTROL_PLANE_NAME:               ${{ vars.CONTROL_PLANE_NAME }}
+          KEYVAULT:                         ${{ vars.KEYVAULT }}
+          OFFLINE_MODE:                     ${{ inputs.offline_mode }}
+          PIPELINE_EXTRA_PARAMETERS:        ${{ inputs.extra_params }}
+          SAP_FUNCTIONAL_TEST_TYPE:         ${{ inputs.test_type == 'ConfigurationChecks' && '' || inputs.sap_functional_test_type }}
+          SAP_SYSTEM_CONFIGURATION_NAME:    "${{ inputs.workload_zone_name }}-${{ inputs.sap_system_identifier }}"
+          TERRAFORM_STATE_STORAGE_ACCOUNT:  ${{ vars.TERRAFORM_REMOTE_STORAGE_ACCOUNT_NAME }}
+          TEST_CASES:                       ${{ inputs.test_cases }}
+          TEST_GROUPS:                      ${{ inputs.test_groups }}
+          TEST_TYPE:                        ${{ inputs.test_type }}
+          USE_MSI:                          ${{ vars.USE_MSI }}
+          WORKLOAD_ZONE_NAME:               ${{ inputs.workload_zone_name }}
+
+      - name:                               Install Ansible Collections
+        run:                                |
+          ansible-galaxy collection install ansible.posix --force
+          ansible-galaxy collection install ansible.utils --force
+          ansible-galaxy collection install ansible.netcommon:5.1.2 --force
+          ansible-galaxy collection install community.general:11.4.1 --force
+
+      - name:                               Quality Assurance Setup
+        uses:                               ./.github/actions/run-ansible
+        with:
+          displayName:                      "Quality Assurance Setup"
+          ansibleFilePath:                  ${{ env.SAP_AUTOMATION_REPO_PATH }}/deploy/ansible/playbook_06_03_00_sap_functional_tests.yaml
+          ansibleConfigPath:                ${{ env.SAP_AUTOMATION_REPO_PATH }}/deploy/ansible/ansible.cfg
+          APPLICATION_CONFIGURATION_NAME:   ${{ vars.APPLICATION_CONFIGURATION_NAME }}
+          ARM_CLIENT_ID:                    ${{ vars.ARM_CLIENT_ID }}
+          ARM_CLIENT_SECRET:                ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_ENVIRONMENT:                  ${{ vars.ARM_ENVIRONMENT || 'public' }}
+          ARM_SUBSCRIPTION_ID:              ${{ steps.preparation.outputs.CP_SUBSCRIPTION }}
+          ARM_TENANT_ID:                    ${{ vars.ARM_TENANT_ID }}
+          CONTROL_PLANE_NAME:               ${{ vars.CONTROL_PLANE_NAME }}
+          CONTROL_PLANE_SUBSCRIPTION_ID:    ${{ steps.preparation.outputs.CP_SUBSCRIPTION }}
+          SAP_AUTOMATION_REPO_PATH:         ${{ env.SAP_AUTOMATION_REPO_PATH }}
+          TERRAFORM_STATE_STORAGE_ACCOUNT:  ${{ vars.TERRAFORM_REMOTE_STORAGE_ACCOUNT_NAME }}
+          USE_MSI:                          ${{ vars.USE_MSI }}
+          WORKLOAD_ZONE_NAME:               ${{ inputs.workload_zone_name }}
+          extraParams:                      ${{ steps.preparation.outputs.NEW_PARAMETERS }}
+          parametersFolder:                 ${{ steps.preparation.outputs.FOLDER }}
+          passwordSecretName:               ${{ steps.preparation.outputs.PASSWORD_KEY_NAME }}
+          sapParams:                        ${{ steps.preparation.outputs.FOLDER }}/artifacts/${{ steps.preparation.outputs.SAP_PARAMETERS }}
+          secretName:                       ${{ steps.preparation.outputs.SSH_KEY_NAME }}
+          sidHosts:                         ${{ steps.preparation.outputs.HOSTS }}
+          userNameSecretName:               ${{ steps.preparation.outputs.USERNAME_KEY_NAME }}
+          vaultName:                        ${{ steps.preparation.outputs.VAULT_NAME }}
+
+      - name:                               Quality Assurance Execution
+        uses:                               ./.github/actions/run-ansible
+        with:
+          displayName:                      "Quality Assurance Execution"
+          ansibleFilePath:                  ${{ steps.preparation.outputs.QA_PLAYBOOK_PATH }}
+          ansibleConfigPath:                ${{ steps.preparation.outputs.QA_ANSIBLE_CONFIG }}
+          ansibleLibraryPath:               ${{ steps.preparation.outputs.QA_LIBRARY }}
+          ansibleModuleUtilsPath:           ${{ steps.preparation.outputs.QA_MODULE_UTILS }}
+          ansibleCollectionsPath:           ${{ steps.preparation.outputs.QA_COLLECTIONS }}
+          ansibleLogPath:                   ${{ steps.preparation.outputs.QA_LOG_PATH }}
+          APPLICATION_CONFIGURATION_NAME:   ${{ vars.APPLICATION_CONFIGURATION_NAME }}
+          ARM_CLIENT_ID:                    ${{ vars.ARM_CLIENT_ID }}
+          ARM_CLIENT_SECRET:                ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_ENVIRONMENT:                  ${{ vars.ARM_ENVIRONMENT || 'public' }}
+          ARM_SUBSCRIPTION_ID:              ${{ steps.preparation.outputs.CP_SUBSCRIPTION }}
+          ARM_TENANT_ID:                    ${{ vars.ARM_TENANT_ID }}
+          CONTROL_PLANE_NAME:               ${{ vars.CONTROL_PLANE_NAME }}
+          CONTROL_PLANE_SUBSCRIPTION_ID:    ${{ steps.preparation.outputs.CP_SUBSCRIPTION }}
+          SAP_AUTOMATION_REPO_PATH:         ${{ env.SAP_AUTOMATION_REPO_PATH }}
+          TERRAFORM_STATE_STORAGE_ACCOUNT:  ${{ vars.TERRAFORM_REMOTE_STORAGE_ACCOUNT_NAME }}
+          USE_MSI:                          ${{ vars.USE_MSI }}
+          WORKLOAD_ZONE_NAME:               ${{ inputs.workload_zone_name }}
+          extraParams:                      ${{ steps.preparation.outputs.QA_PARAMETERS }}
+          parametersFolder:                 ${{ steps.preparation.outputs.FOLDER }}
+          passwordSecretName:               ${{ steps.preparation.outputs.PASSWORD_KEY_NAME }}
+          sapParams:                        ${{ steps.preparation.outputs.FOLDER }}/artifacts/${{ steps.preparation.outputs.SAP_PARAMETERS }}
+          secretName:                       ${{ steps.preparation.outputs.SSH_KEY_NAME }}
+          sidHosts:                         ${{ steps.preparation.outputs.HOSTS }}
+          userNameSecretName:               ${{ steps.preparation.outputs.USERNAME_KEY_NAME }}
+          vaultName:                        ${{ steps.preparation.outputs.VAULT_NAME }}
+
+      - name:                               Upload Quality Assurance Results
+        if:                                 always()
+        uses:                               actions/upload-artifact@v4
+        with:
+          name:                             quality-assurance-${{ inputs.workload_zone_name }}-${{ inputs.sap_system_identifier }}
+          if-no-files-found:                ignore
+          retention-days:                   30
+          path:                             |
+            ${{ steps.preparation.outputs.FOLDER }}/quality_assurance
+            ${{ steps.preparation.outputs.FOLDER }}/logs
+
+      - name:                               Commit Quality Assurance Results
+        if:                                 always()
+        run:                                |
+          cd "$GITHUB_WORKSPACE" || exit 1
+          git config --global user.email "${{ github.actor }}@users.noreply.github.com"
+          git config --global user.name "${{ github.actor }}"
+          added=0
+          for folder in quality_assurance logs; do
+            target="${{ steps.preparation.outputs.FOLDER }}/${folder}"
+            if [ -d "$target" ]; then
+              git add --ignore-errors "$target" && added=1
+            fi
+          done
+          if [ $added -eq 1 ] && ! git diff --cached --quiet; then
+            git commit -m "Quality assurance results for ${{ inputs.workload_zone_name }}-${{ inputs.sap_system_identifier }} [skip ci]"
+            git push
+          else
+            echo "No quality assurance results to commit."
+          fi
+        env:
+          GITHUB_TOKEN:                     ${{ steps.get_workflow_token.outputs.token }}
