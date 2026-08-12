@@ -132,6 +132,7 @@ jobs:
           KEYVAULT:                         ${{ vars.KEYVAULT }}
           OFFLINE_MODE:                     ${{ inputs.offline_mode }}
           PIPELINE_EXTRA_PARAMETERS:        ${{ inputs.extra_params }}
+          QA_IDENTITY_CLIENT_ID:            ${{ vars.QA_IDENTITY_CLIENT_ID }}
           SAP_FUNCTIONAL_TEST_TYPE:         ${{ inputs.test_type == 'ConfigurationChecks' && '' || inputs.sap_functional_test_type }}
           SAP_SYSTEM_CONFIGURATION_NAME:    "${{ inputs.workload_zone_name }}-${{ inputs.sap_system_identifier }}"
           TERRAFORM_STATE_STORAGE_ACCOUNT:  ${{ vars.TERRAFORM_REMOTE_STORAGE_ACCOUNT_NAME }}
