@@ -23,10 +23,10 @@ on:
         description:                        "Test type"
         type:                               choice
         required:                           true
-        default:                            SAPFunctionalTests
+        default:                            ConfigurationChecks
         options:
-          - SAPFunctionalTests
           - ConfigurationChecks
+          - SAPFunctionalTests
       sap_functional_test_type:
         description:                        "SAP functional test type (ignored for ConfigurationChecks)"
         type:                               choice
@@ -37,12 +37,12 @@ on:
           - CentralServicesHighAvailability
           - AzureBackupDatabase
       test_groups:
-        description:                        "Test groups to run, comma separated (empty runs the whole test type)"
+        description:                        "Test group to run, a single exact group name such as HA_SCS (empty runs the whole test type)"
         type:                               string
         required:                           false
         default:                            ""
       test_cases:
-        description:                        "Test cases to run, comma separated (empty runs the whole group)"
+        description:                        "Test case task names to run, comma separated, such as ascs-migration (requires a test group)"
         type:                               string
         required:                           false
         default:                            ""
