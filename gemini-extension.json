@@ -1,0 +1,6 @@
+{
+  "name": "azure-sap-automation-github",
+  "version": "0.1.0",
+  "description": "AI skills for the SDAF (SAP Deployment Automation Framework) GitHub Actions surface: repository bootstrap and setup utility, public Azure authentication diagnostics with documented sovereign-cloud limitations, and the 00-12 workflow sequence.",
+  "contextFileName": "GEMINI.md"
+}
