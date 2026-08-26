@@ -98,6 +98,15 @@ runs:
     - name: Run Ansible Playbook
       shell: bash
       run: |
+        if [[ -n "${ANSIBLE_LIBRARY_INPUT}" ]]; then
+          export ANSIBLE_LIBRARY="${ANSIBLE_LIBRARY_INPUT}"
+        fi
+        if [[ -n "${ANSIBLE_MODULE_UTILS_INPUT}" ]]; then
+          export ANSIBLE_MODULE_UTILS="${ANSIBLE_MODULE_UTILS_INPUT}"
+        fi
+        if [[ -n "${ANSIBLE_LOG_PATH_INPUT}" ]]; then
+          export ANSIBLE_LOG_PATH="${ANSIBLE_LOG_PATH_INPUT}"
+        fi
         cd ${{ inputs.SAP_AUTOMATION_REPO_PATH }}
         deploy/scripts/pipeline_scripts/05-run-ansible.sh
       env:
@@ -107,9 +116,9 @@ runs:
         ARM_SUBSCRIPTION_ID: ${{ inputs.ARM_SUBSCRIPTION_ID }}
         USE_MSI: ${{ inputs.USE_MSI }}
         ANSIBLE_COLLECTIONS_PATH: ${{ inputs.ansibleCollectionsPath != '' && format('{0}:~/.ansible/collections:/opt/ansible/collections', inputs.ansibleCollectionsPath) || '~/.ansible/collections:/opt/ansible/collections' }}
-        ANSIBLE_LIBRARY: ${{ inputs.ansibleLibraryPath != '' && inputs.ansibleLibraryPath || '~/.ansible/plugins/modules:/usr/share/ansible/plugins/modules' }}
-        ANSIBLE_MODULE_UTILS: ${{ inputs.ansibleModuleUtilsPath != '' && inputs.ansibleModuleUtilsPath || '~/.ansible/plugins/module_utils:/usr/share/ansible/plugins/module_utils' }}
-        ANSIBLE_LOG_PATH: ${{ inputs.ansibleLogPath }}
+        ANSIBLE_LIBRARY_INPUT: ${{ inputs.ansibleLibraryPath }}
+        ANSIBLE_MODULE_UTILS_INPUT: ${{ inputs.ansibleModuleUtilsPath }}
+        ANSIBLE_LOG_PATH_INPUT: ${{ inputs.ansibleLogPath }}
         ANSIBLE_PYTHON_INTERPRETER: auto_silent
         ANSIBLE_DISPLAY_SKIPPED_HOSTS: false
         ANSIBLE_HOST_KEY_CHECKING: false

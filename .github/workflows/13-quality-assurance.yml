@@ -55,7 +55,7 @@ on:
         description:                        "Extra Parameters"
         type:                               string
         required:                           false
-        default:                            " "
+        default:                            ""
 
 env:
   ANSIBLE_CORE_VERSION:                     ${{ vars.ANSIBLE_CORE_VERSION }}
@@ -84,6 +84,7 @@ jobs:
         uses:                               actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth:                      0
+          token:                            ${{ steps.get_workflow_token.outputs.token }}
 
       - name:                               Azure Login with User Managed Identity
         if:                                 ${{ vars.USE_MSI == 'true' }}
@@ -228,12 +229,13 @@ jobs:
           for folder in quality_assurance logs; do
             target="${{ steps.preparation.outputs.FOLDER }}/${folder}"
             if [ -d "$target" ]; then
-              git add --ignore-errors "$target" && added=1
+              git add --force --ignore-errors "$target" && added=1
             fi
           done
           if [ $added -eq 1 ] && ! git diff --cached --quiet; then
             git commit -m "Quality assurance results for ${{ inputs.workload_zone_name }}-${{ inputs.sap_system_identifier }} [skip ci]"
-            git push
+            git pull --rebase origin "${GITHUB_REF_NAME}"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
           else
             echo "No quality assurance results to commit."
           fi
