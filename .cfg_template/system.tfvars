@@ -592,6 +592,9 @@ NFS_provider = "AFS"
 # use_random_id_for_storageaccounts defines if the sapmnt storage account name will have a random suffix
 use_random_id_for_storageaccounts = true
 
+# AFS_usr_sap, if defined, uses the existing Azure Files sapmnt storage for application tier /usr/sap, with each application server including the PAS mounting its own directory; unset uses local storage, independent of use_simple_mount and /sapmnt placement; only applies when NFS_provider = "AFS"
+#AFS_usr_sap = false
+
 #########################################################################################
 #                                                                                       #
 #  ANF                                                                                  #
