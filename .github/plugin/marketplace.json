@@ -1,0 +1,31 @@
+{
+  "name": "sap-automation-gh-bootstrap",
+  "metadata": {
+    "description": "SDAF GitHub Actions plugin marketplace",
+    "version": "0.1.0"
+  },
+  "owner": {
+    "name": "Microsoft"
+  },
+  "plugins": [
+    {
+      "name": "azure-sap-automation-github",
+      "source": ".",
+      "description": "AI skills for the SDAF (SAP Deployment Automation Framework) GitHub Actions surface: repository bootstrap and setup utility, public Azure authentication diagnostics with documented sovereign-cloud limitations, and the 00-12 workflow sequence.",
+      "version": "0.1.0",
+      "author": {
+        "name": "Microsoft",
+        "url": "https://www.microsoft.com"
+      },
+      "homepage": "https://github.com/Azure/sap-automation-gh-bootstrap",
+      "repository": "https://github.com/Azure/sap-automation-gh-bootstrap",
+      "license": "MIT",
+      "keywords": [
+        "sap",
+        "sdaf",
+        "azure",
+        "github-actions"
+      ]
+    }
+  ]
+}
