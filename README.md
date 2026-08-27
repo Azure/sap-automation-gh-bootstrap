@@ -29,6 +29,57 @@ The deployment consists of:
 > [!WARNING]
 > The sample configuration creates billable Azure resources. Review architecture, networking, sizing, quota, security, and cost before applying a Terraform plan.
 
+## AI-skills plugin
+
+This repository ships an AI-skills plugin,
+`azure-sap-automation-github`, that gives GitHub Copilot CLI, Claude Code,
+and Gemini CLI grounded context about the GitHub Actions procedure for
+SDAF: the bootstrap flow and setup utility, public Azure authentication
+diagnostics (with documented sovereign-cloud limitations), and the
+ordered `00`–`12` workflow catalogue. The plugin is documentation and
+diagnostics only — it does not modify workflows, `.cfg_template/`, or
+`WORKSPACES/`, and installing it is never a prerequisite for using the
+workflows.
+
+**All SDAF AI plugins are optional and independently installable.** For
+complete coverage:
+
+- Local or scripted execution: install the hub plugin
+  `azure-sap-automation` from
+  [`Azure/sap-automation`](https://github.com/Azure/sap-automation).
+- Azure DevOps control plane: install the hub plus the Azure DevOps
+  plugin `azure-sap-automation-devops` from
+  [`Azure/sap-automation-bootstrap`](https://github.com/Azure/sap-automation-bootstrap).
+- GitHub Actions control plane (this repository): install the hub plus
+  `azure-sap-automation-github` shown below.
+
+**The hub plugin is recommended for complete coverage; this plugin does
+not install it automatically.** See [`docs/PLUGINS.md`](docs/PLUGINS.md)
+for the full operator flow (verify, prompt examples, troubleshooting).
+
+### GitHub Copilot CLI
+
+```bash
+copilot plugin marketplace add Azure/sap-automation-gh-bootstrap
+copilot plugin install azure-sap-automation-github@sap-automation-gh-bootstrap
+```
+
+### Claude Code
+
+```text
+/plugin marketplace add Azure/sap-automation-gh-bootstrap
+/plugin install azure-sap-automation-github@sap-automation-gh-bootstrap
+```
+
+### Gemini CLI
+
+```bash
+gemini extensions install https://github.com/Azure/sap-automation-gh-bootstrap
+```
+
+For verification, example prompts, and troubleshooting, continue in
+[`docs/PLUGINS.md`](docs/PLUGINS.md).
+
 ## Getting started
 
 Follow the guides in order:
