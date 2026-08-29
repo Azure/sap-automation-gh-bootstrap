@@ -101,7 +101,7 @@ jobs:
     steps:
       - name:                                     Get app token
         id:                                       get_workflow_token
-        uses:                                     actions/create-github-app-token@v3
+        uses:                                     actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         with:
           client-id:                              ${{ secrets.APPLICATION_ID }}
           private-key:                            ${{ secrets.APPLICATION_PRIVATE_KEY }}
@@ -117,14 +117,14 @@ jobs:
           fetch-depth:                            0
 
       - name:                                     Checkout Samples Repository
-        uses:                                     actions/checkout@v6
+        uses:                                     actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
           repository:                             Azure/SAP-automation-samples
           path:                                   SAP-automation-samples
 
       - name:                                     Azure Login with User Managed Identity
         if:                                       ${{ vars.USE_MSI == 'true' }}
-        uses:                                     azure/login@v3
+        uses:                                     azure/login@7ddb5af1ef8758cf1353cf3b42f940aee27ba21c # v3.0.2
         with:
           environment:                            ${{ vars.AZURE_ENVIRONMENT || 'AzureCloud' }}
           audience:                               ${{ vars.AZURE_AUDIENCE || 'api://AzureADTokenExchange' }}
@@ -136,7 +136,7 @@ jobs:
 
       - name:                                     Azure Login with Service Principal
         if:                                       ${{ vars.USE_MSI != 'true' }}
-        uses:                                     azure/login@v3
+        uses:                                     azure/login@7ddb5af1ef8758cf1353cf3b42f940aee27ba21c # v3.0.2
         with:
           environment:                            ${{ vars.AZURE_ENVIRONMENT || 'AzureCloud' }}
           audience:                               ${{ vars.AZURE_AUDIENCE || 'api://AzureADTokenExchange' }}
