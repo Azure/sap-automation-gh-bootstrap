@@ -42,7 +42,7 @@ jobs:
     steps:
       - name:                                     Get app token
         id:                                       get_workflow_token
-        uses:                                     actions/create-github-app-token@v3
+        uses:                                     actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         with:
           client-id:                              ${{ secrets.APPLICATION_ID }}
           private-key:                            ${{ secrets.APPLICATION_PRIVATE_KEY }}
@@ -59,7 +59,7 @@ jobs:
 
       - name:                                     Azure Login with User Managed Identity
         if:                                       ${{ vars.USE_MSI == 'true' }}
-        uses:                                     azure/login@v3
+        uses:                                     azure/login@7ddb5af1ef8758cf1353cf3b42f940aee27ba21c # v3.0.2
         with:
           environment:                            ${{ vars.AZURE_ENVIRONMENT || 'AzureCloud' }}
           audience:                               ${{ vars.AZURE_AUDIENCE || 'api://AzureADTokenExchange' }}
@@ -71,7 +71,7 @@ jobs:
 
       - name:                                     Azure Login with Service Principal
         if:                                       ${{ vars.USE_MSI != 'true' }}
-        uses:                                     azure/login@v3
+        uses:                                     azure/login@7ddb5af1ef8758cf1353cf3b42f940aee27ba21c # v3.0.2
         with:
           environment:                            ${{ vars.AZURE_ENVIRONMENT || 'AzureCloud' }}
           audience:                               ${{ vars.AZURE_AUDIENCE || 'api://AzureADTokenExchange' }}
@@ -125,14 +125,14 @@ jobs:
 
       - name:                                     Get app token
         id:                                       get_workflow_token
-        uses:                                     actions/create-github-app-token@v3
+        uses:                                     actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         with:
           client-id:                                 ${{ secrets.APPLICATION_ID }}
           private-key:                            ${{ secrets.APPLICATION_PRIVATE_KEY }}
 
       - name:                                     Azure Login with Service Principal
         if:                                       ${{ vars.USE_MSI != 'true' }}
-        uses:                                     azure/login@v3
+        uses:                                     azure/login@7ddb5af1ef8758cf1353cf3b42f940aee27ba21c # v3.0.2
         with:
           environment:                            ${{ vars.AZURE_ENVIRONMENT || 'AzureCloud' }}
           audience:                               ${{ vars.AZURE_AUDIENCE || 'api://AzureADTokenExchange' }}
@@ -142,7 +142,7 @@ jobs:
 
       - name:                                     Azure Login with initial Service Principal to remove the self-hosted runner
         if:                                       ${{ vars.USE_MSI == 'true' }}
-        uses:                                     azure/login@v3
+        uses:                                     azure/login@7ddb5af1ef8758cf1353cf3b42f940aee27ba21c # v3.0.2
         with:
           environment:                            ${{ vars.AZURE_ENVIRONMENT || 'AzureCloud' }}
           audience:                               ${{ vars.AZURE_AUDIENCE || 'api://AzureADTokenExchange' }}
